@@ -41,3 +41,7 @@ a, a:hover {
   color: #e66;
   text-decoration: underline;
 }
+
+h4 {
+	float: left;
+}

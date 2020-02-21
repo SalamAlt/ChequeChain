@@ -61,19 +61,27 @@ app.post('/api/mine', (req, res) => {
 });
 
 app.post('/api/transact', (req, res) => {
-  const { amount, recipient } = req.body;
+  //const { amount, recipient } = req.body;
+  //const { recipient, chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance } = req.body;
+  const { chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance } = req.body;
 
   let transaction = transactionPool
     .existingTransaction({ inputAddress: wallet.publicKey });
 
   try {
     if (transaction) {
-      transaction.update({ senderWallet: wallet, recipient, amount });
+      transaction.update({ senderWallet: wallet, recipient, amount }); 
     } else {
       transaction = wallet.createTransaction({
-        recipient,
-        amount,
-        chain: blockchain.chain
+        /*recipient,
+        amount,*/
+        chain: blockchain.chain,
+		chequeID, 
+		transitNumber, 
+		institutionNumber, 
+		accountNumber, 
+		clientName, 
+		chequeBalance
       });
     }
   } catch(error) {
