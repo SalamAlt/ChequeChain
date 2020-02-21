@@ -3,7 +3,7 @@ const { verifySignature } = require('../util');
 const { REWARD_INPUT, MINING_REWARD } = require('../config');
 
 class Transaction {
-	constructor({ chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance, outputMap, input }){
+	constructor({ senderWallet, recipient, chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance, outputMap, input }){
 	//constructor({ senderWallet, recipient, amount, outputMap, input }){
 		this.id = uuid();
 		/*this.chequeID = chequeID;
@@ -14,12 +14,12 @@ class Transaction {
 		this.chequeBalance = chequeBalance;*/
 
 		//this.outputMap = outputMap || this.createOutputMap({ senderWallet, recipient, amount });
-		this.outputMap = outputMap || this.createOutputMap({ chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance });
+		this.outputMap = outputMap || this.createOutputMap({ recipient, chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance });
 		//this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap });
 		this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap, chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance });
 	}
 
-	/*createOutputMap({ chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance }) {
+	createOutputMap({ recipient, chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance }) {
 	//createOutputMap({ senderWallet, recipient, amount }) {
 		const outputMap = {};
 
@@ -32,9 +32,10 @@ class Transaction {
 		outputMap[4] = accountNumber;
 		outputMap[5] = clientName;
 		outputMap[6] = chequeBalance;
+		outputMap[7] = recipient; //payee
 
 		return outputMap;
-	}*/
+	}
 
 	//createInput({ senderWallet, outputMap }) {
 	createInput({ senderWallet, outputMap, chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance }) {
@@ -42,7 +43,7 @@ class Transaction {
 			timestamp: Date.now(),
 			amount: senderWallet.balance,
 			address: senderWallet.accountNumber,
-			chequeID,
+			chequeID: chequeID,
 			transitNumber: transitNumber,
 			institutionNumber: institutionNumber,
 			accountNumber: accountNumber,
@@ -70,7 +71,8 @@ class Transaction {
 	}
 
 	static validTransaction(transaction) {
-		const { input: { address, amount, signature }, outputMap } = transaction;
+		//const { input: { address, amount, signature }, outputMap } = transaction;
+		const { input: { address, amount, signature, chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance }, outputMap } = transaction;
 
 		const outputTotal = Object.values(outputMap).reduce((total, outputAmount) => total + outputAmount);
 		/*

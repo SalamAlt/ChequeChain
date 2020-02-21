@@ -52,12 +52,12 @@ class ConductTransaction extends Component {
   }
 
   conductTransaction = () => {
-    const { chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance } = this.state; //removed recipient from
+    const { chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance, recipient } = this.state; //removed recipient from
 
     fetch(`${document.location.origin}/api/transact`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance }) //removed recipient from front
+      body: JSON.stringify({ chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance, recipient }) //removed recipient from front
     }).then(response => response.json())
       .then(json => {
         alert(json.message || json.type);

@@ -15,17 +15,17 @@ class Wallet {
 		return this.keyPair.sign(cryptoHash(data))
 	}
 
-	createTransaction({ chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance }) {
+	createTransaction({ recipient, chain, chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance }) {
 		if (chain) {
 			this.balance = Wallet.calculateBalance({ chain, address: this.publicKey });
 		}
 
-		if (amount > this.balance){
+		/*(if (amount > this.balance){
 			throw new Error('Amount exceeds balance');
-		}
+		}*/
 
 		//return new Transaction({ senderWallet: this, recipient, amount });
-		return new Transaction({ chequeID, transitNumber, institutionNumber, accountNumber, clientName, chequeBalance });
+		return new Transaction({ senderWallet: this, recipient, chequeID,  transitNumber, institutionNumber, accountNumber, clientName, chequeBalance });
 	}
 
 	static calculateBalance({ chain, address }) {
