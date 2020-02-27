@@ -17,10 +17,10 @@ class TransactionPool {
         this.transactionMap = transactionMap;
     }
 
-    existingTransaction({ inputAddress }) {
+    existingTransaction({ transChequeID }) {
         const transactions = Object.values(this.transactionMap);
 
-        return transactions.find(transaction => transaction.input.address === inputAddress);
+        return transactions.find(transaction => transaction.chequeID === transChequeID);
     }
 
     validTransactions() {

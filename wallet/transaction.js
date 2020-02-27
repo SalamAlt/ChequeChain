@@ -10,7 +10,7 @@ class Transaction {
 		this.transitNumber = transitNumber || Math.floor(Math.random() * 1000);
 		this.institutionNumber = institutionNumber || Math.floor(Math.random() * 1000);
 		this.accountNumber = accountNumber || Math.floor(Math.random() * 1000);
-		this.clientName = clientName || String(Math.floor(Math.random() * 1000));
+		this.clientName = clientName || "Random Person";
 
         this.outputMap = outputMap || this.createOutputMap({ senderWallet, recipient, amount });
         this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap});
@@ -34,7 +34,7 @@ class Transaction {
         };
     }
 
-    update({ senderWallet, recipient, amount, chequeID }) {
+    update({ senderWallet, recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName }) {
         if (amount > this.outputMap[senderWallet.publicKey]){
             throw new Error('Amount exceeds balance');
         }
@@ -50,6 +50,10 @@ class Transaction {
         
         this.input = this.createInput({ senderWallet, outputMap: this.outputMap });
         this.chequeID = chequeID;
+        this.transitNumber = transitNumber || Math.floor(Math.random() * 1000);
+		this.institutionNumber = institutionNumber || Math.floor(Math.random() * 1000);
+		this.accountNumber = accountNumber || Math.floor(Math.random() * 1000);
+		this.clientName = clientName || "Random Person";
     }
 
     static validTransaction(transaction) {

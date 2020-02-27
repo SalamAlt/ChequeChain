@@ -39,7 +39,7 @@ app.post('/api/transact', (req, res) => {
     const { amount, recipient, chequeID, transitNumber, institutionNumber, accountNumber, clientName } = req.body;
 
     let transaction = transactionPool
-        .existingTransaction({ inputAddress: wallet.publicKey });
+        .existingTransaction({ transChequeID: chequeID });
 
     try {
         if (transaction) {
@@ -132,7 +132,7 @@ const walletBarAction = () => generateWalletTransaction({
     wallet: walletBar, recipient: wallet.publicKey, amount: 15
 });
 
-for (let i=0; i<0; i++) {
+for (let i=0; i<3; i++) {
     if (i%3 === 0) {
         walletAction();
         walletFooAction();
