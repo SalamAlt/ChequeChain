@@ -24,11 +24,11 @@ class ConductTransaction extends Component {
 	}
 
 	updateInstitutionNumber = event => {
-	this.setState({ institutionNumber: Number(event.target.value) }); 
+		this.setState({ institutionNumber: Number(event.target.value) }); 
 	}
 
 	updateClientName = event => {
-	this.setState({ clientName: event.target.value }); 
+		this.setState({ clientName: event.target.value }); 
 	}
 
 	updateAccountNumber = event => {

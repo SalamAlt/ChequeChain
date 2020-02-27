@@ -10,7 +10,7 @@ class Transaction {
 		this.transitNumber = transitNumber || Math.floor(Math.random() * 1000);
 		this.institutionNumber = institutionNumber || Math.floor(Math.random() * 1000);
 		this.accountNumber = accountNumber || Math.floor(Math.random() * 1000);
-		this.clientName = clientName || Math.floor(Math.random() * 1000);
+		this.clientName = clientName || String(Math.floor(Math.random() * 1000));
 
         this.outputMap = outputMap || this.createOutputMap({ senderWallet, recipient, amount });
         this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap});

@@ -19,11 +19,11 @@ const Transaction = ({ transaction })  => {
                     } 
                 })
             }
-            <div>ChequeID: {chequeID}</div>
-            <div>transitNumber: {transitNumber}</div>
-            <div>institutionNumber: {institutionNumber}</div>
-            <div>accountNumber: {accountNumber}</div>
-            <div>clientName: {clientName}</div>
+            <div>Cheque ID: {chequeID}</div>
+            <div>Transit Number: {transitNumber}</div>
+            <div>Institution Number: {institutionNumber}</div>
+            <div>Account Number: {accountNumber}</div>
+            <div>Client Name: {clientName}</div>
         </div>
     );
 }
