@@ -27,10 +27,6 @@ class ConductTransaction extends Component {
 	this.setState({ institutionNumber: Number(event.target.value) }); 
 	}
 
-	updateTransitNumber = event => {
-	this.setState({ transitNumber: Number(event.target.value) }); 
-	}
-
 	updateClientName = event => {
 	this.setState({ clientName: event.target.value }); 
 	}
