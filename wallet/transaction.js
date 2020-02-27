@@ -3,9 +3,15 @@ const { verifySignature } = require('../util');
 const { REWARD_INPUT, MINING_REWARD } = require('../config');
 
 class Transaction {
-    constructor({ senderWallet, recipient, amount, outputMap, input, chequeID }){
+    constructor({ senderWallet, recipient, amount, outputMap, input, chequeID, transitNumber, institutionNumber, accountNumber, clientName }){
         this.chequeID = chequeID || Math.floor(Math.random() * 1000); //Set the chequeID to the passed value or a random one
         this.id = uuid();
+
+		this.transitNumber = transitNumber || Math.floor(Math.random() * 1000);
+		this.institutionNumber = institutionNumber || Math.floor(Math.random() * 1000);
+		this.accountNumber = accountNumber || Math.floor(Math.random() * 1000);
+		this.clientName = clientName || Math.floor(Math.random() * 1000);
+
         this.outputMap = outputMap || this.createOutputMap({ senderWallet, recipient, amount });
         this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap});
     }

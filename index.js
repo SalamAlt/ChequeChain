@@ -36,19 +36,23 @@ app.post('/api/mine', (req, res) => {
 });
 
 app.post('/api/transact', (req, res) => {
-    const { amount, recipient, chequeID } = req.body;
+    const { amount, recipient, chequeID, transitNumber, institutionNumber, accountNumber, clientName } = req.body;
 
     let transaction = transactionPool
         .existingTransaction({ inputAddress: wallet.publicKey });
 
     try {
         if (transaction) {
-            transaction.update({ senderWallet: wallet, recipient, amount, chequeID });
+            transaction.update({ senderWallet: wallet, recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName });
         } else {
             transaction = wallet.createTransaction({ 
                 recipient, 
                 amount, 
                 chequeID,
+				transitNumber, 
+				institutionNumber, 
+				accountNumber, 
+				clientName,
                 chain: blockchain.chain
             });
         }
@@ -128,7 +132,7 @@ const walletBarAction = () => generateWalletTransaction({
     wallet: walletBar, recipient: wallet.publicKey, amount: 15
 });
 
-for (let i=0; i<10; i++) {
+for (let i=0; i<0; i++) {
     if (i%3 === 0) {
         walletAction();
         walletFooAction();

@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Transaction = ({ transaction })  => {
-    const { input, outputMap, chequeID } = transaction;//make sure to add variables being grabbed from transaction
+    const { input, outputMap, chequeID, transitNumber, institutionNumber, accountNumber, clientName } = transaction;//make sure to add variables being grabbed from transaction
     const recipients = Object.keys(outputMap); //recipients array
     
     return (
@@ -20,6 +20,10 @@ const Transaction = ({ transaction })  => {
                 })
             }
             <div>ChequeID: {chequeID}</div>
+            <div>transitNumber: {transitNumber}</div>
+            <div>institutionNumber: {institutionNumber}</div>
+            <div>accountNumber: {accountNumber}</div>
+            <div>clientName: {clientName}</div>
         </div>
     );
 }
