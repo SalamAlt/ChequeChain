@@ -4,6 +4,7 @@ const { REWARD_INPUT, MINING_REWARD } = require('../config');
 
 class Transaction {
     constructor({ senderWallet, recipient, amount, outputMap, input, chequeID, transitNumber, institutionNumber, accountNumber, clientName }){
+        this.recipient = recipient;
         this.chequeID = chequeID || Math.floor(Math.random() * 1000); //Set the chequeID to the passed value or a random one
         this.id = uuid();
 
@@ -18,14 +19,13 @@ class Transaction {
 
     createOutputMap({ senderWallet, recipient, amount }) {
         const outputMap = {};
-
         outputMap[recipient] = amount;
         outputMap[senderWallet.publicKey] = senderWallet.balance - amount;
 
         return outputMap;
     }
 
-    createInput({ senderWallet, outputMap, chequeID }) {
+    createInput({ senderWallet, outputMap }) {
         return {
             timestamp: Date.now(),
             amount: senderWallet.balance,
@@ -40,6 +40,7 @@ class Transaction {
         }
 
         if (!this.outputMap[recipient]) {
+            delete this.outputMap[this.recipient];
             this.outputMap[recipient] = amount;
         } else {
             this.outputMap[recipient] = this.outputMap[recipient] + amount;

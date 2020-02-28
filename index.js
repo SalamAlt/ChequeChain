@@ -39,7 +39,7 @@ app.post('/api/transact', (req, res) => {
     const { amount, recipient, chequeID, transitNumber, institutionNumber, accountNumber, clientName } = req.body;
 
     let transaction = transactionPool
-        .existingTransaction({ transChequeID: chequeID });
+        .existingTransaction({ transChequeID: chequeID });//return the transaction in the pool matching the chequeID passed in
 
     try {
         if (transaction) {

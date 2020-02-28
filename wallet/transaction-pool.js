@@ -22,7 +22,7 @@ class TransactionPool {
 
         return transactions.find(transaction => transaction.chequeID === transChequeID);
     }
-
+    
     validTransactions() {
         return Object.values(this.transactionMap).filter(
             transaction => Transaction.validTransaction(transaction)
