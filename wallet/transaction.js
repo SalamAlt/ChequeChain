@@ -45,6 +45,7 @@ class Transaction {
             this.outputMap[recipient] = amount;
         } else {//...and when the recipeient does exist. We may need when the cases are for when some other piece of info exists instead
             this.outputMap[recipient] = this.outputMap[recipient] + amount;
+            this.outputMap[senderWallet.publicKey] += this.outputMap[this.recipient];
         }//This is notably similar to the existingTransaction call made that matches the transaction with chequeID, except this is for deciding if any values *IN* the transaction
         //need special handling
 

@@ -12,7 +12,8 @@ describe('TransactionPool', () => {
         transaction = new Transaction({
             senderWallet,
             recipient: 'fake-recipient',
-            amount: 50
+            amount: 50,
+            chequeID: 99
         });
     });
 
@@ -26,11 +27,11 @@ describe('TransactionPool', () => {
     });
 
     describe('existingTransaction()', () => {
-        it('returns an existing transaction given an input address', () => {
+        it('returns an existing transaction given a cheque ID', () => {
             transactionPool.setTransaction(transaction);
 
             expect(
-                transactionPool.existingTransaction({ inputAddress: senderWallet.publicKey })
+                transactionPool.existingTransaction({ transChequeID: transaction.chequeID })
             ).toBe(transaction);
         })
     });
