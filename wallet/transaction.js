@@ -52,6 +52,7 @@ class Transaction {
         this.outputMap[senderWallet.publicKey] = 
             this.outputMap[senderWallet.publicKey] - amount;
         
+        this.recipient = recipient;
         this.input = this.createInput({ senderWallet, outputMap: this.outputMap });
         this.chequeID = chequeID;
         this.transitNumber = transitNumber || Math.floor(Math.random() * 1000);
