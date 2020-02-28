@@ -39,12 +39,14 @@ class Transaction {
             throw new Error('Amount exceeds balance');
         }
 
-        if (!this.outputMap[recipient]) {
+        if (!this.outputMap[recipient]) {//These cases will need updating. This case describes when the `recipient` does not already exist...
+            this.outputMap[senderWallet.publicKey] += this.outputMap[this.recipient];
             delete this.outputMap[this.recipient];
             this.outputMap[recipient] = amount;
-        } else {
+        } else {//...and when the recipeient does exist. We may need when the cases are for when some other piece of info exists instead
             this.outputMap[recipient] = this.outputMap[recipient] + amount;
-        }
+        }//This is notably similar to the existingTransaction call made that matches the transaction with chequeID, except this is for deciding if any values *IN* the transaction
+        //need special handling
 
         this.outputMap[senderWallet.publicKey] = 
             this.outputMap[senderWallet.publicKey] - amount;
@@ -64,7 +66,7 @@ class Transaction {
             .reduce((total, outputAmount) => total + outputAmount);
 
         if (amount !== outputTotal) {
-            console.error(`Indalid transaction from ${address}`);            
+            console.error(`Invalid transaction from ${address}`);            
             return false;
         }
         
