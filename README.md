@@ -25,8 +25,3 @@ ALTER TABLE `users` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2
 
 where accountdb`is the name of the database you'd like to create and corresponds to what we have in the db.js file.
 In the db.js file make sure the credentials match. The password is the same you use for workbench.`
-
-##Production Code for Heroku
-
-productionCode is the code that is used on Heroku, the only time we push to this branch is when code that works locally is _*ready to be pushed to production AND make sure that you do a pull request.*_ The package.json file and .gitignore cannot be changed otherwise the push to heroku wont work. Essentially trying to deploy like how the guy does it in the video does not work, you have to manually run npm i and build the dist folder and push those manually instead of automatically being created by heroku. So to do this, in the .gitignore, I had to remove all instances of dist and node_modules and it works.
-
