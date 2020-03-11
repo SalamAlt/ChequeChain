@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { FormGroup, FormControl, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import history from '../history';
+const axios = require('axios');
 
 class ConductTransaction extends Component {
     state = { recipient: '', amount: '', chequeID: '', transitNumber: '', institutionNumber: '', accountNumber: '', clientName: '', date: ''};
@@ -50,6 +51,22 @@ class ConductTransaction extends Component {
                 alert(json.message || json.type);
                 history.push('/transaction-pool');
             });
+
+		axios.post('http://52.91.213.183/cheques', {
+			balance: 1000,
+			date: date,
+			payee: recipient,
+			payorSign: clientName,
+			chequeId: chequeID,
+			finInstNum: institutionNumber,
+			tranNum: transitNumber,
+			accountId: accountNumber,
+			amount: amount
+		}).then(response => {
+			console.log(response);
+		}).catch(err => {
+			console.log(err);
+		});
     }
 
     render() {

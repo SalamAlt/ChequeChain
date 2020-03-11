@@ -32,6 +32,7 @@
     "nodemon": "^1.18.4"
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "body-parser": "^1.18.3",
     "dependencies": "0.0.1",
     "elliptic": "^6.4.1",

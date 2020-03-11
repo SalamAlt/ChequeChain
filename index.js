@@ -8,7 +8,9 @@ const TransactionPool = require('./wallet/transaction-pool');
 const Wallet = require('./wallet');
 const TransactionMiner = require('./app/transaction-miner');
 
+const axios = require('axios');
 const app = express();
+
 const blockchain = new Blockchain();
 const transactionPool = new TransactionPool();
 const wallet = new Wallet();
@@ -133,7 +135,7 @@ const walletBarAction = () => generateWalletTransaction({
     wallet: walletBar, recipient: wallet.publicKey, amount: 15
 });
 
-for (let i=0; i<3; i++) {
+for (let i=0; i<0; i++) {
     if (i%3 === 0) {
         walletAction();
         walletFooAction();
