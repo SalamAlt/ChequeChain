@@ -41,8 +41,8 @@ class Landing extends Component {
     )
 
     return (
-      <div class="container">
-      <div class="position-static">
+      <div className="container">
+      <div className="position-static">
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark rounded ">
        <br />
         <button
@@ -61,7 +61,7 @@ class Landing extends Component {
           className="collapse navbar-collapse justify-content-md-center"
           id="navbarsExample10"
         >
- <a class="navbar-brand" href="#">
+ <a className="navbar-brand" href="#">
           <img className='logo' src={logo}/>
           </a>
 
