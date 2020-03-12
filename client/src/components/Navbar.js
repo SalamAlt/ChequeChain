@@ -41,9 +41,9 @@ class Landing extends Component {
     )
 
     return (
-      <div>
-       <img className='logo' src={logo}/>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark rounded">
+      <div class="container">
+      <div class="position-static">
+      <nav className="navbar navbar-expand-lg navbar-dark bg-dark rounded ">
        <br />
         <button
           className="navbar-toggler"
@@ -61,8 +61,14 @@ class Landing extends Component {
           className="collapse navbar-collapse justify-content-md-center"
           id="navbarsExample10"
         >
+ <a class="navbar-brand" href="#">
+          <img className='logo' src={logo}/>
+          </a>
+
+
           <ul className="navbar-nav">
             <li className="nav-item">
+
               <Link to="/" className="nav-link">
                 Home
               </Link>
@@ -71,6 +77,7 @@ class Landing extends Component {
           {localStorage.usertoken ? userLink : loginRegLink}
         </div>
       </nav>
+      </div>
       </div>
     )
   }
