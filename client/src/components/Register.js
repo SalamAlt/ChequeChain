@@ -37,6 +37,7 @@ fetch(`${document.location.origin}/users/register`, {
   body: JSON.stringify({first_name, last_name, email, password})
 }).then(response => {     
   console.log('Registered')
+  alert("Successfully registered! Please login.");
   this.props.history.push(`/login`)
 })
 .catch(err => {

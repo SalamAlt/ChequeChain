@@ -6,15 +6,12 @@
     color: white;
   }
   
- 
-  
- 
+  /*logo animation function*/
   @keyframes App-logo-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
 
-  
 body {
     background-color: #444;
     color: #fff;
@@ -25,9 +22,11 @@ body {
     word-wrap: break-word;
 }
 
+/*the time is how fast the logo should spin, lower is faster*/
 .logo {
     width: 250px;
     height: 250px;
+    animation: App-logo-spin infinite 8s linear;
 }
 
 .App {
