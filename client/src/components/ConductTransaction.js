@@ -106,7 +106,7 @@ class ConductTransaction extends Component {
 				  <h4>Date on Cheque</h4>
 				  <FormControl
 					input='text'
-					placeholder='mm/dd/yyyy'
+					placeholder='yyyy-mm-dd'
 					value={this.state.date}
 					onChange={this.updateDate}
 				  />
