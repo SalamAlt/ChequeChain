@@ -50,7 +50,7 @@ body {
     padding: 5;
 }
 
-.ConductTransaction, .TransactionPool {
+.ConductTransaction, .TransactionPool, .DepositCheque {
     margin: 10%;
 }
 

@@ -4,12 +4,12 @@ import Block from './Block';
 import Navbar from './Navbar'
 
 class Blocks extends Component {
-    state = { blocks: [] };
+    state = { wallets};
 
     componentDidMount() {
-        fetch(`${document.location.origin}/api/blocks`)
+        fetch(`${document.location.origin}/api/bank-wallets`)
         .then(response => response.json())
-        .then(json => this.setState({ blocks: json }));
+        .then(json => this.setState({ wallets: json }));
     }
 
     render() {
@@ -18,11 +18,11 @@ class Blocks extends Component {
         return (
             <div>
                 <Navbar />
-                <h3>Blocks</h3>
+                <h3>Bank Wallets</h3>
                 {
-                    this.state.blocks.map(block => {//for each block item
+                    Object.keys(this.state.wallets).map(key => {//for each block item
                         return (  
-                            <Block key={block.hash} block={block} />//render according to instructions in the Block.js file
+                            <li>Bank: {key}, Balance: {this.state.wallets[key]}</li> //render according to instructions in the Block.js file
                         );
                     })
                 }

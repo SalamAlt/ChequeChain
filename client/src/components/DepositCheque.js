@@ -5,7 +5,7 @@ import history from '../history';
 const axios = require('axios');
 import Navbar from './Navbar'
 
-class ConductTransaction extends Component {
+class DepositCheque extends Component {
     state = { recipient: '', amount: '', chequeID: '', transitNumber: '', institutionNumber: '', accountNumber: '', clientName: '', date: ''};
 
     updateRecipient = event => {
@@ -40,33 +40,48 @@ class ConductTransaction extends Component {
 		this.setState({ date: event.target.value })
 	}
 
-    conductTransaction = () => {//API insertion point #2
+    DepositCheque = () => {//API insertion point #2
         const { recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date } = this.state;
+        const deposInstNum = process.env.INST_NUM;
 
-		axios.post('https://54.89.144.88/cheques', {
-			balance: 1000,
-			date: date,
-			payee: recipient,
-			payorSign: clientName,
-			chequeId: chequeID,
+        axios.get('https://54.89.144.88/cheques', {
+            chequeId: chequeID,
+            tranNum: transitNumber,
 			finInstNum: institutionNumber,
-			tranNum: transitNumber,
-			accountId: accountNumber,
-			amount: amount
+            accountId: accountNumber,
+            clientName: clientName
 		}).then(response => {
-			console.log(response);
-			alert("Successfully created a cheque.")
-            history.push('/');
+            console.log(response);
+            //response is an object with params: status, tokenizationString, balance, date, payee, payorsign
+            //do checks such as comparing balance and amount, status, DATE, etc.... later
+
+
+
+
+            //then put into blockchain
+            fetch(`${document.location.origin}/api/transact`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date, deposInstNum })
+            }).then(response => response.json())
+                .then(json => {
+                    alert(json.message || json.type);
+                    history.push('/transaction-pool');
+                });
 		}).catch(err => {
 			console.log(err);
 		});
+        
+
+
+
     }
 
     render() {
         return (
-            <div className='ConductTransaction'>
+            <div className='DepositCheque'>
 				 <Navbar />
-                <h3>Conduct a Transaction</h3>
+                <h3>Deposit A Cheque</h3>
                 <FormGroup>
 					<h4>Recipient</h4>
                     <FormControl
@@ -142,7 +157,7 @@ class ConductTransaction extends Component {
                 <div>
                 <Button
                     bsStyle="danger"
-                    onClick={this.conductTransaction}
+                    onClick={this.DepositCheque}
                 >
                     Submit
                 </Button>
@@ -152,4 +167,4 @@ class ConductTransaction extends Component {
     }
 }
 
-export default ConductTransaction;
+export default DepositCheque;
