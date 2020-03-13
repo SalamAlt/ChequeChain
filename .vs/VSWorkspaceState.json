@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\client",
+    "\\client\\src",
+    "\\client\\src\\components",
+    "\\database",
+    "\\models",
+    "\\routes"
+  ],
+  "SelectedNode": "\\models\\User.js",
+  "PreviewInSolutionExplorer": false
+}
