@@ -15,19 +15,28 @@ class Wallet {
         return this.keyPair.sign(cryptoHash(data))
     }
 
-    createTransaction({ recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date, chain }){
+    createTransaction({ recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date, chain, pool }){
+        let previousPoolBalance = 0;
+        
         if (chain) {
             this.balance = Wallet.calculateBalance({
                 chain,
                 address: this.publicKey
             });
         }
+        
+        if (pool) {
+            previousPoolBalance = pool.sumTransactions({senderWallet: this.publicKey });
+            //console.log("Create transaction call balance: "+previousPoolBalance);
+            //console.log("Wallet Balance during call: "+this.balance);
+            //console.log("Updated wallet balance before transaction object:" +this.balance);
+        }
 
         if (amount > this.balance) {
             throw new Error('Amount exceeds balance');
         }
 
-        return new Transaction({ senderWallet: this, recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, date, clientName });
+        return new Transaction({ senderWallet: this, recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, date, clientName, previousPoolBalance });
     }
 
     static calculateBalance({ chain, address }) {
@@ -37,7 +46,7 @@ class Wallet {
         for (let i=chain.length-1; i>0; i--){
             const block = chain[i];
 
-            for (let transaction of block.data) {
+            let transaction = block.data[block.data.length-1];
                 if (transaction.input.address === address) {
                     hasConductedTransaction = true;
                 }
@@ -47,7 +56,6 @@ class Wallet {
                 if (addressOutput) {
                     outputsTotal = outputsTotal + addressOutput;
                 }
-            }
 
             if (hasConductedTransaction) {
                 break;
@@ -56,6 +64,6 @@ class Wallet {
         
         return hasConductedTransaction ? outputsTotal : STARTING_BALANCE + outputsTotal;
     }
-};
+}
 
 module.exports = Wallet;

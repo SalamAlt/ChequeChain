@@ -48,9 +48,25 @@ app.post('/api/transact', (req, res) => {
     let transaction = transactionPool
         .existingTransaction({ transChequeID: chequeID });//return the transaction in the pool matching the chequeID passed in
 
+    let existingSender = transactionPool.existingSender({ senderWallet: wallet.publicKey });
+
     try {
         if (transaction) {
             transaction.update({ senderWallet: wallet, recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date });
+        } else if (existingSender) {
+            //console.log("Caught existing sender");
+            transaction = wallet.createTransaction({ 
+                recipient, 
+                amount, 
+                chequeID,
+				transitNumber, 
+				institutionNumber, 
+				accountNumber, 
+				clientName,
+                chain: blockchain.chain,
+                date,
+                pool: transactionPool
+            });
         } else {
             transaction = wallet.createTransaction({ 
                 recipient, 
@@ -69,9 +85,11 @@ app.post('/api/transact', (req, res) => {
     }
 
     transactionPool.setTransaction(transaction);
-
+    
     pubsub.broadcastTransaction(transaction);
-
+    
+    console.log("POST API CALL BAL: "+transactionPool.sumTransactions({senderWallet: wallet.publicKey}));
+    
     res.json({ type: 'sucess', transaction });
 });
 
