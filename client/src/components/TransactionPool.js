@@ -16,7 +16,7 @@ class TransactionPool extends Component {
         .then(response => response.json())
         .then(json => this.setState({ transactionPoolMap: json }));
       
-        /*axios.get('https://54.89.144.88/cheques?chequeId=198&tranNum=58562&finInstNum=257&accountId=684')
+        axios.get('https://54.89.144.88/cheques?chequeId=198&tranNum=58562&finInstNum=257&accountId=659')
         //axios.get('https://54.89.144.88/cheques?chequeId=${chequeID}&tranNum=${transitNumber}&finInstNum=${institutionNumber}&accountId=${accountNumber}')
         .then((res) => {
             console.log("Get request", res);   
@@ -28,7 +28,7 @@ class TransactionPool extends Component {
             const postFormInsititutionNumber = res.data.finInstNum;
 
             const postFormAccountNumber = res.data.accountId;
-        })*/
+        })
     }
 
     fetchMineTransactions = () => {//Before the on click calls this, we may wish to execute the API function to verify the cheques, and then on success post them to the chain

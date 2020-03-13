@@ -3,11 +3,8 @@
     "",
     "\\client",
     "\\client\\src",
-    "\\client\\src\\components",
-    "\\database",
-    "\\models",
-    "\\routes"
+    "\\client\\src\\components"
   ],
-  "SelectedNode": "\\models\\User.js",
+  "SelectedNode": "\\index.js",
   "PreviewInSolutionExplorer": false
 }
