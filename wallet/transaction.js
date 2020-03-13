@@ -42,15 +42,13 @@ class Transaction {
         }
 
         this.outputMap[senderWallet.publicKey] += this.outputMap[this.recipient];
+        delete this.outputMap[this.recipient];
         this.outputMap[recipient] = amount;
-        if (!this.outputMap[recipient]) {//These cases will need updating. This case describes when the `recipient` does not already exist...
+        /*if (!this.outputMap[recipient]) {//These cases will need updating. This case describes when the `recipient` does not already exist...
             delete this.outputMap[this.recipient];
-        }
+        }*/
         this.outputMap[senderWallet.publicKey] = 
             this.outputMap[senderWallet.publicKey] - amount;
-        if (balanceUpdate){
-            
-        }
         
         this.recipient = recipient;
         this.input = this.createInput({ senderWallet, outputMap: this.outputMap });

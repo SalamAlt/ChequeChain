@@ -88,7 +88,7 @@ app.post('/api/transact', (req, res) => {
     
     pubsub.broadcastTransaction(transaction);
     
-    console.log("POST API CALL BAL: "+transactionPool.sumTransactions({senderWallet: wallet.publicKey}));
+    //console.log("POST API CALL BAL: "+transactionPool.sumTransactions({senderWallet: wallet.publicKey}));
     
     res.json({ type: 'sucess', transaction });
 });
