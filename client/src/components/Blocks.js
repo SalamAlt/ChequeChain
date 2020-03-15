@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import Block from './Block';
+import Navbar from './NavigationBar';
 
 class Blocks extends Component {
     state = { blocks: [] };
@@ -16,11 +17,11 @@ class Blocks extends Component {
 
         return (
             <div>
-                <div><Link to='/'>Home</Link></div>
+            <Navbar />
                 <h3>Blocks</h3>
                 {
                     this.state.blocks.map(block => {//for each block item
-                        return (  
+                        return (
                             <Block key={block.hash} block={block} />//render according to instructions in the Block.js file
                         );
                     })

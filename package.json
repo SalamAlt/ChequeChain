@@ -39,12 +39,17 @@
     "hex-to-binary": "^1.0.1",
     "history": "^4.7.2",
     "parcel-bundler": "^1.12.4",
-    "react": "^16.6.0",
+    "react": "^16.13.0",
     "react-bootstrap": "^0.32.4",
-    "react-dom": "^16.6.0",
+    "react-dom": "^16.13.0",
+    "react-is": "^16.13.0",
     "react-router-dom": "^4.3.1",
+    "react-sidebar": "^3.0.2",
+    "reactstrap": "^8.4.1",
     "redis": "^2.8.0",
     "request": "^2.88.0",
+    "semantic-ui-react": "^0.88.2",
+    "styled-components": "^5.0.1",
     "uuid": "^3.3.2"
   }
 }

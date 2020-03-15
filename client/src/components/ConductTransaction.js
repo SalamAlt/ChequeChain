@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { FormGroup, FormControl, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import history from '../history';
+import Navbar from './NavigationBar';
 
 class ConductTransaction extends Component {
     state = { recipient: '', amount: '', chequeID: '', transitNumber: '', institutionNumber: '', accountNumber: '', clientName: ''};
@@ -20,19 +21,19 @@ class ConductTransaction extends Component {
     }
 
 	updateTransitNumber = event => {
-		this.setState({ transitNumber: Number(event.target.value) }); 
+		this.setState({ transitNumber: Number(event.target.value) });
 	}
 
 	updateInstitutionNumber = event => {
-		this.setState({ institutionNumber: Number(event.target.value) }); 
+		this.setState({ institutionNumber: Number(event.target.value) });
 	}
 
 	updateClientName = event => {
-		this.setState({ clientName: event.target.value }); 
+		this.setState({ clientName: event.target.value });
 	}
 
 	updateAccountNumber = event => {
-	this.setState({ accountNumber: Number(event.target.value) }); 
+	this.setState({ accountNumber: Number(event.target.value) });
 	}
 
     conductTransaction = () => {//API insertion point #2
@@ -52,7 +53,7 @@ class ConductTransaction extends Component {
     render() {
         return (
             <div className='ConductTransaction'>
-                <Link to='/'>Home</Link>
+            <Navbar />
                 <h3>Conduct a Transaction</h3>
                 <FormGroup>
 					<h4>Recipient</h4>

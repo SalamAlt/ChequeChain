@@ -3,6 +3,7 @@ import { Button } from 'react-bootstrap';
 import Transaction from './Transaction';
 import { Link } from 'react-router-dom';
 import history from '../history';
+import Navbar from './NavigationBar';
 
 const POLL_INTERVAL_MS = 10000;
 
@@ -43,7 +44,7 @@ class TransactionPool extends Component {
     render() {
         return (
             <div className='TransactionPool'>
-                <div><Link to='.'>Home</Link></div>
+            <Navbar />
                 <h3>Transaction Pool</h3>
                 {
                     Object.values(this.state.transactionPoolMap).map(transaction => {
@@ -56,7 +57,7 @@ class TransactionPool extends Component {
                     })
                 }
                 <hr />
-                <Button 
+                <Button
                     bsStyle="danger"
                     onClick={this.fetchMineTransactions}
                     >
