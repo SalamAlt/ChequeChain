@@ -52,8 +52,9 @@ app.post('/api/transact', (req, res) => {
 
     try {
         if (transaction) {
+            let updateAmount = amount - transaction.lastAmount;
             transaction.update({ senderWallet: wallet, recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date });
-            transactionPool.updateTransactions(wallet.publicKey, amount-transaction.inputAmount, transaction.date);
+            transactionPool.updateTransactions(wallet, updateAmount, transaction.inputDate);
         } else if (existingSender && !transaction) {
             //console.log("Caught existing sender");
             transaction = wallet.createTransaction({ 

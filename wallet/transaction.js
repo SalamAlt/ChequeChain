@@ -8,6 +8,8 @@ class Transaction {
         this.chequeID = chequeID || Math.floor(Math.random() * 1000); //Set the chequeID to the passed value or a random one
         this.id = uuid();
         this.inputAmount = amount;
+        this.lastAmount = amount;
+        this.inputDate = Date.now();
 		this.transitNumber = transitNumber || Math.floor(Math.random() * 1000);
 		this.institutionNumber = institutionNumber || Math.floor(Math.random() * 1000);
 		this.accountNumber = accountNumber || Math.floor(Math.random() * 1000);
@@ -41,13 +43,14 @@ class Transaction {
             throw new Error('Amount exceeds balance');
         }
 
-        this.outputMap[senderWallet.publicKey] += this.outputMap[this.recipient];
-        delete this.outputMap[this.recipient];
-        this.outputMap[recipient] = amount;
+        this.outputMap[senderWallet.publicKey] += this.outputMap[this.recipient];//add the old recipient value back to the sender
+        delete this.outputMap[this.recipient];//delete the old recipient
+        this.outputMap[recipient] = amount;//set the amount for the new recipient
 
         this.outputMap[senderWallet.publicKey] = 
-            this.outputMap[senderWallet.publicKey] - amount;
+            this.outputMap[senderWallet.publicKey] - amount;//The sender's total minus the new amount
         
+        this.lastAmount = amount;
         this.recipient = recipient;
         this.input = this.createInput({ senderWallet, outputMap: this.outputMap });
         this.chequeID = chequeID;
@@ -58,8 +61,13 @@ class Transaction {
         this.date = date || Date.now();
     }
 
-    updateAmount(amount){
+    updateAmount(amount, senderWallet){
+        if (amount > this.outputMap[senderWallet.publicKey]){
+            throw new Error('Amount exceeds balance');
+        }
+
         this.outputMap[this.input.address] -= amount;
+        this.input = this.createInput({ senderWallet, outputMap: this.outputMap });
     }
 
     static validTransaction({ transaction, finalAmount }) {

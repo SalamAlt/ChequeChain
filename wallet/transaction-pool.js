@@ -46,13 +46,12 @@ class TransactionPool {
     }
 
     updateTransactions(senderWallet, amount, date) {
-        const transactions = Object.values(this.transactionMap).filter(transaction => transaction.input.address === senderWallet);
+        const transactions = Object.values(this.transactionMap).filter(transaction => transaction.input.address === senderWallet.publicKey);
         for (let transaction of transactions) {
-            if (transaction.date > date){
-                transaction.updateAmount(amount);
+            if (transaction.inputDate > date){
+                transaction.updateAmount(amount, senderWallet);
             }
         }
-        console.log(transactions);
         return transactions;
     }
 
