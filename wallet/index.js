@@ -44,13 +44,9 @@ class Wallet {
         let outputsTotal = 0;
         console.log("chain length: "+chain.length);
         for (let i=chain.length-1; i>0; i--){
-            console.log("i: "+i);
             const block = chain[i];
-            console.log(block);
             for (let j = 1; j<=block.data.length; j++){
-                console.log("j: "+j);
                 let transaction = block.data[block.data.length-j];
-                console.log(transaction);
                 if (transaction.input.address === address) {
                     hasConductedTransaction = true;
                 }
