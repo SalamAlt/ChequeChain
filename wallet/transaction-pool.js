@@ -45,6 +45,17 @@ class TransactionPool {
         );
     }
 
+    updateTransactions(senderWallet, amount, date) {
+        const transactions = Object.values(this.transactionMap).filter(transaction => transaction.input.address === senderWallet);
+        for (let transaction of transactions) {
+            if (transaction.date > date){
+                transaction.updateAmount(amount);
+            }
+        }
+        console.log(transactions);
+        return transactions;
+    }
+
     clearBlockchainTransactions({ chain }) {
         for (let i=1; i<chain.length; i++) {
             const block = chain[i];

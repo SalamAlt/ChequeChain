@@ -12,7 +12,7 @@ class Transaction {
 		this.institutionNumber = institutionNumber || Math.floor(Math.random() * 1000);
 		this.accountNumber = accountNumber || Math.floor(Math.random() * 1000);
 		this.clientName = clientName || "Random Person";
-        this.date = date || "01/01/2020";
+        this.date = date || Date.now();
         this.previousPoolBalance = previousPoolBalance || 0;
         this.outputMap = outputMap || this.createOutputMap({ senderWallet, recipient, amount, previousPoolBalance });
         this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap});
@@ -54,8 +54,12 @@ class Transaction {
         this.transitNumber = transitNumber || Math.floor(Math.random() * 1000);
 		this.institutionNumber = institutionNumber || Math.floor(Math.random() * 1000);
 		this.accountNumber = accountNumber || Math.floor(Math.random() * 1000);
-		this.clientName = clientName || "Random Person";
-        this.date = date || "01/01/2020";
+        this.clientName = clientName || "Random Person";
+        this.date = date || Date.now();
+    }
+
+    updateAmount(amount){
+        this.outputMap[this.input.address] -= amount;
     }
 
     static validTransaction({ transaction, finalAmount }) {
@@ -69,6 +73,10 @@ class Transaction {
             console.error(`Invalid transaction from ${address}`);            
             return false;
         }*///FIX THIS CHECK!!!!///////
+
+        if(transaction.date > Date.now()){
+            return false
+        }
         
         if (!verifySignature({ publicKey: address, data: outputMap, signature })) {
             console.error(`Invalid signature from ${address}`)
