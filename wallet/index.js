@@ -42,21 +42,24 @@ class Wallet {
     static calculateBalance({ chain, address }) {
         let hasConductedTransaction = false;
         let outputsTotal = 0;
-
+        console.log("chain length: "+chain.length);
         for (let i=chain.length-1; i>0; i--){
+            console.log("i: "+i);
             const block = chain[i];
-            for (let i = 1; i<block.data.length; i++){
-                let transaction = block.data[block.data.length-i];
-                    if (transaction.input.address === address) {
-                        hasConductedTransaction = true;
-                    }
+            console.log(block);
+            for (let j = 1; j<=block.data.length; j++){
+                console.log("j: "+j);
+                let transaction = block.data[block.data.length-j];
+                console.log(transaction);
+                if (transaction.input.address === address) {
+                    hasConductedTransaction = true;
+                }
     
-                    const addressOutput = transaction.outputMap[address];
+                const addressOutput = transaction.outputMap[address];
     
-                    if (addressOutput) {
-                        outputsTotal = outputsTotal + addressOutput;
-                    }
-    
+                if (addressOutput) {
+                    outputsTotal = outputsTotal + addressOutput;
+                }
                 if (hasConductedTransaction) {
                     break;
                 }
@@ -66,6 +69,7 @@ class Wallet {
             }
         }
         
+        //console.log(outputsTotal);
         return hasConductedTransaction ? outputsTotal : STARTING_BALANCE + outputsTotal;
     }
 }

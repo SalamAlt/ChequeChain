@@ -10,8 +10,12 @@ class TransactionPool {
         this.transactionMap[transaction.id] = transaction;
     }
 
-    clear() {
-        this.transactionMap = {};
+    clear() {//When the pool is cleared, this is what is called
+        for (let transaction of Object.values(this.transactionMap)){
+            if (transaction.date<Date.now()){
+                delete this.transactionMap[transaction.id];
+            }
+        } 
     }
 
     setMap(transactionMap) {
@@ -55,7 +59,7 @@ class TransactionPool {
         return transactions;
     }
 
-    clearBlockchainTransactions({ chain }) {
+    clearBlockchainTransactions({ chain }) {//When the blockchain is replaced, this is called
         for (let i=1; i<chain.length; i++) {
             const block = chain[i];
 
