@@ -64,8 +64,14 @@ class ConductTransaction extends Component {
 
 		const httpsAgent = new https.Agent({ ca: caCrt, keepAlive: false });
 		*/
+
+		const agent = new https.Agent({  
+			rejectUnauthorized: false
+		});
+		//axios.get('https://something.com/foo', { httpsAgent: agent });
+
 		axios.post('https://54.89.144.88/cheques', {
-			httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+			httpsAgent: agent,
 			balance: 1000,
 			date: date,
 			payee: recipient,
