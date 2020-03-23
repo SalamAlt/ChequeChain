@@ -59,7 +59,7 @@ class ConductTransaction extends Component {
 			rejectUnauthorized: false
 			})
 		});
-		instance.get('https://54.89.144.88/cheques');
+		//instance.post('https://54.89.144.88/cheques');
 
 		// At request level
 		const agent = new https.Agent({  
