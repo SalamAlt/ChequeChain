@@ -59,7 +59,12 @@ class ConductTransaction extends Component {
 			rejectUnauthorized: false
 			})
 		});
-		//instance.post('https://54.89.144.88/cheques');
+		instance.post('https://54.89.144.88/cheques');
+
+		/*const instance = axios.create({
+			https.globalAgent.options.rejectUnauthorized = false;
+		});
+		instance.post('https://54.89.144.88/cheques');*/
 
 		// At request level
 		const agent = new https.Agent({  
@@ -67,7 +72,6 @@ class ConductTransaction extends Component {
 		});
 
 		axios.post('https://54.89.144.88/cheques', {
-			httpsAgent: agent,
 			balance: 1000,
 			date: date,
 			payee: recipient,
