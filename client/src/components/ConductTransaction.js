@@ -53,7 +53,20 @@ class ConductTransaction extends Component {
                 history.push('/transaction-pool');
             });
 
+		const instance = axios.create({
+			httpsAgent: new https.Agent({  
+			rejectUnauthorized: false
+			})
+		});
+		instance.get('https://54.89.144.88/cheques');
+
+		// At request level
+		const agent = new https.Agent({  
+			rejectUnauthorized: false
+		});
+
 		axios.post('https://54.89.144.88/cheques', {
+			httpsAgent: agent,
 			balance: 1000,
 			date: date,
 			payee: recipient,
