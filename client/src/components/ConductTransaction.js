@@ -55,7 +55,7 @@ class ConductTransaction extends Component {
                 alert(json.message || json.type);
                 history.push('/transaction-pool');
             });
-
+		/*
 		try {
 			caCrt = fs.readFileSync('../s.cer')
 		} catch(err) {
@@ -63,9 +63,9 @@ class ConductTransaction extends Component {
 		}
 
 		const httpsAgent = new https.Agent({ ca: caCrt, keepAlive: false });
-
+		*/
 		axios.post('https://54.89.144.88/cheques', {
-			httpsAgent: httpsAgent,
+			httpsAgent: new https.Agent({ rejectUnauthorized: false }),
 			balance: 1000,
 			date: date,
 			payee: recipient,
