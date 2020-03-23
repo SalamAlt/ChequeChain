@@ -62,7 +62,10 @@ class ConductTransaction extends Component {
 			console.log('Make sure that the CA cert file is named ca.crt', err);
 		}
 
+		const httpsAgent = new https.Agent({ ca: caCrt, keepAlive: false });
+
 		axios.post('https://54.89.144.88/cheques', {
+			httpsAgent: httpsAgent,
 			balance: 1000,
 			date: date,
 			payee: recipient,
