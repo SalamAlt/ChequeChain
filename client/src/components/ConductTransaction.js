@@ -3,6 +3,7 @@ import { FormGroup, FormControl, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import history from '../history';
 const axios = require('axios');
+const https = require('https');
 import Navbar from './Navbar'
 
 class ConductTransaction extends Component {
