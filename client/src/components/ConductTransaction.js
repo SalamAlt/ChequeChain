@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import history from '../history';
 const axios = require('axios');
 const https = require('https');
+const fs = require('fs');
+let caCrt = '';
 import Navbar from './Navbar'
 
 class ConductTransaction extends Component {
@@ -54,22 +56,11 @@ class ConductTransaction extends Component {
                 history.push('/transaction-pool');
             });
 
-		const instance = axios.create({
-			httpsAgent: new https.Agent({  
-			rejectUnauthorized: false
-			})
-		});
-		instance.post('https://54.89.144.88/cheques');
-
-		/*const instance = axios.create({
-			https.globalAgent.options.rejectUnauthorized = false;
-		});
-		instance.post('https://54.89.144.88/cheques');*/
-
-		// At request level
-		const agent = new https.Agent({  
-			rejectUnauthorized: false
-		});
+		try {
+			caCrt = fs.readFileSync('../s.cer')
+		} catch(err) {
+			console.log('Make sure that the CA cert file is named ca.crt', err);
+		}
 
 		axios.post('https://54.89.144.88/cheques', {
 			balance: 1000,
