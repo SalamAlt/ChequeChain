@@ -44,7 +44,7 @@ class DepositCheque extends Component {
         const { recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date } = this.state;
         const deposInstNum = process.env.INST_NUM;
 
-        axios.get('https://54.89.144.88/cheques', {
+        axios.get('https://chequechain.wasplabs.ca/cheques', {
             chequeId: chequeID,
             tranNum: transitNumber,
 			finInstNum: institutionNumber,

@@ -125,35 +125,39 @@ app.get('/api/bank-wallets', (req, res) => {
 ////////
 var output = {};
 
-axios.get('https://54.89.144.88/banks?bodyLimit=100&pageLimit=1')
+axios.get('https://chequechain.wasplabs.ca/banks?bodyLimit=100&pageLimit=1')
 .then(response => {
     var banks_set = new Set();
-        //add each banks institution number to a set (does not repeat valeus)
-        for (let i=0; i < response.data.length; i++) {
-          banks_set.add(response.data[i].finInstNum)
-          console.log(response.data[i].finInstNum);
-        }
-        banks_set = Array.from(banks_set);
-
-        for (let i=0; i < banks_set.length; i++) {
-            let foundSettled = false;
-           for (let j=blockchain.chain.length-1; j>0; j--) {
-                const block = blockchain.chain[i];
-                for (let transaction of block.data) {
-                 if (banks_set[i] == transaction.recipient) {
+    //add each banks institution number to a set (does not repeat values)
+    
+    for (let i=0; i < response.data.length; i++) {
+      banks_set.add(response.data[i].finInstNum)
+    }
+    banks_array = Array.from(banks_set);
+    var output = {};
+    for (let i=0; i < banks_array.length; i++) {
+        let foundSettled = false;
+       for (let j=blockchain.chain.length-1; j>0; j--) {
+            const block = blockchain.chain[j];
+            for (let transaction of block.data) {
+                if (banks_array[i] == transaction.recipient) {
                         foundSetlled = true;
-                        output[banks_set[i]] = transaction.inputAmount;
-                     }
-                     if (foundSettled)
-                     break;
+                        output[banks_array[i]] = transaction.inputAmount;
                  }
-                 if (foundSettled)
-                     break;
-                     else
-                     output[banks_set[i]] = STARTING_BALANCE;
-            } //end of blockchain loop
-        }   //end of banks_set loop
+                if (foundSettled)
+                    break;
+            }   //end of transaction loop
+            if (foundSettled)
+                 break;
+        }//end of blockchain loop
+        if (!foundSettled)
+             output[banks_array[i]] = STARTING_BALANCE;
 
+    }//end of banks_array loop
+
+    console.log("testing bank wallets under this line: ");
+
+        console.log(output);
         res.json({
             output
         });
@@ -243,6 +247,7 @@ app.listen(PORT, () => {
     }
 });
 
+
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 //clearance server every set time SHOULD check all transaction numbers finstNum
 //and then update those banks cryptocurrency...
@@ -252,29 +257,18 @@ process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 const intervalFunc = () =>
  { 
     const banks_set = new Set();
-    axios.get('https://54.89.144.88/banks?bodyLimit=100&pageLimit=1')
+    axios.get('https://chequechain.wasplabs.ca/banks?bodyLimit=100&pageLimit=1')
     .then(response => {
         const banks_set = new Set();
         //add each banks institution number to a set (does not repeat valeus)
         for (let i=0; i < response.data.length; i++) {
-          banks_set.add(response.data[i].finInstNum)
+          banks_set.add( {key: response.data[i].finInstNum, balance: STARTING_BALANCE})
         }
         const banks_array = Array.from(banks_set);
-       // console.log(response.data);
-       console.log(banks_set);
-       // const banks_array = Array.from(banks_set);
-        console.log(banks_array);
+
            //wallet public key will be finstNum
-           //give each bank a starting balance and initialize output map
-           var outputMap = {};
-           for (let i = 0; i < banks_array; i++)
-           {
-               outputmap[banks_set[i]] = STARTING_BALANCE
-               console.log(banks_array[i]);
-           }
-           
+
            //iterate over blockchain and count each finstNum
-           let outputsTotal = 0;
        for (let i=blockchain.chain.length-1; i>0; i--) {
            const block = blockchain.chain[i];
            for (let transaction of block.data) {
@@ -286,9 +280,13 @@ const intervalFunc = () =>
                const amount = (transaction.input.amount) - transaction.outputMap[transaction.input.address]
               // console.log(banks_set[i]);
              //  console.log(transaction.institutionNumber);
-                outputmap[transaction.institutionNumber] -= amount
+           //  console.log("ins number asking for is "+transaction.institutionNumber )
+           var idx = banks_array.findIndex(bank => bank.key == transaction.institutionNumber);
+             banks_array[idx].balance -= amount
+
                  //bank who deposited cheque gets the money
-                outputmap[transaction.deposInstNum] += amount
+                idx = banks_array.findIndex(bank => bank.key == transaction.deposInstNum);
+                banks_array[idx].balance += amount
                 }
             }
        } //end of blockchain loop
@@ -297,32 +295,46 @@ const intervalFunc = () =>
        //now make "transactions" which should technically be from one bank to another in terms of who paid who but no time
        //  so i'll make it from THIS settlement node to each bank
        var transaction;
-       for (let i = 0; i < banks_array; i++)
+       for (let i = 0; i < banks_array.length; i++)
        {
+/*
+        senderWallet: this, recipient, amount, chequeID, 
+        transitNumber, institutionNumber, accountNumber, 
+        date, clientName, previousPoolBalance, deposInstNum });
+*/
+
+const outputMap = {};
+outputMap[banks_array[i].key] = banks_array[i].balance;
+outputMap[wallet.publicKey] = wallet.balance;
             transaction = new Transaction({
-               wallet, recipient: banks_array[i], amount: outputmap[banks_array[i]], 
+               senderWallet: wallet, recipient: banks_array[i].key, amount: banks_array[i].balance, 
                chequeID: -1, transitNumber : -1, institutionNumber : -1, 
-               accountNumber: -1, date : new Date(year, month, day), clientName: "Settlement Node"
+               accountNumber: -1, date : Date().toString(), clientName: "Settlement Node",deposInstNum: banks_array[i].key,
+               outputMap: outputMap
            });
-   
+         //  console.log(transaction)
+        //   console.log("Before setting transaction!");
+         //  console.log(transactionPool.transactionMap);
            transactionPool.setTransaction(transaction);
+          // console.log("After setting transaction");
+         //  console.log(transactionPool.transactionMap);
            pubsub.broadcastTransaction(transaction);
        }
    
-       if (transaction)
-       transactionMiner.mineTransactions();
+      if (transaction)
+      transactionMiner.mineTransactions();
 		}).catch(err => {
             console.log(err);
             console.log("Could not perform settlement!");
         });
-
 }
 
 //salam yet again
 if (process.env.SETTLEMENT_SERVER === 'true'){
+    intervalFunc();
     console.log("Can't stop me now!")
-    wallet.balance = 99999999999;
-    setInterval(intervalFunc, 10000);	//10 seconds
+    wallet.balance = 999999;
+    setInterval(intervalFunc, 10000000);	//10 seconds
 }
 
 
@@ -330,13 +342,13 @@ if (process.env.SETTLEMENT_SERVER === 'true'){
 
 //console.log(process.env.INST_NUM)
 //set this bank node to a random institution number. Later I will make each bank get assigned one by a server on start
-    axios.get('https://54.89.144.88/banks?bodyLimit=100&pageLimit=1')
+    axios.get('https://chequechain.wasplabs.ca/banks?bodyLimit=100&pageLimit=1')
     .then(response => {
         var banks_set = new Set();
             //add each banks institution number to a set (does not repeat valeus)
             for (let i=0; i < response.data.length; i++) {
               banks_set.add(response.data[i].finInstNum)
-              console.log(response.data[i].finInstNum);
+            //  console.log(response.data[i].finInstNum);
             }
             const size = banks_set.size;
          //   console.log("size:"+size)
@@ -346,10 +358,8 @@ if (process.env.SETTLEMENT_SERVER === 'true'){
         console.log("new INST num is " + process.env.INST_NUM)
 		}).catch(err => {
             console.log(err);
-            console.log("Could not perform settlement!");
+            console.log("Could not set this banks institution number!");
         });
-        
-
 
 
 //modified package.json with new commands

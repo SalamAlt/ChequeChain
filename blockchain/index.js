@@ -46,6 +46,8 @@ class Blockchain {
             let rewardTransactionCount = 0;
 
             for (let transaction of block.data) {
+             //   console.log("from validTransactionData bc-index: right under this line")
+              //  console.log(transaction)
                 if (transaction.input.address === REWARD_INPUT.address) {
                     rewardTransactionCount += 1;
 
@@ -69,7 +71,7 @@ class Blockchain {
                         address: transaction.input.address
                     });
 
-                    if (transaction.input.amount !== trueBalance) {
+                    if (transaction.institutionNumber!= -1 && transaction.input.amount !== trueBalance) {
                         console.error('Invalid input amount');
                         return false;
                     }

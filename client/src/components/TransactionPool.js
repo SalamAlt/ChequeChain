@@ -16,7 +16,7 @@ class TransactionPool extends Component {
         .then(response => response.json())
         .then(json => this.setState({ transactionPoolMap: json }));
       
-        axios.get('https://54.89.144.88/cheques?chequeId=198&tranNum=58562&finInstNum=257&accountId=659')
+        axios.get('https://chequechain.wasplabs.ca/cheques?chequeId=198&tranNum=58562&finInstNum=257&accountId=659')
         //axios.get('https://54.89.144.88/cheques?chequeId=${chequeID}&tranNum=${transitNumber}&finInstNum=${institutionNumber}&accountId=${accountNumber}')
         .then((res) => {
             console.log("Get request", res);   

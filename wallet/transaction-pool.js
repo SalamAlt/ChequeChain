@@ -41,8 +41,8 @@ class TransactionPool {
     
     validTransactions() {
         return Object.values(this.transactionMap).filter(
-            transaction => Transaction.validTransaction({ transaction, finalAmount: this.sumTransactions({senderWallet: transaction.input.address}) })
-        );
+            transaction => Transaction.validTransaction( transaction)  )
+            //, finalAmount: this.sumTransactions({senderWallet: transaction.input.address}) })
     }
 
     clearBlockchainTransactions({ chain }) {

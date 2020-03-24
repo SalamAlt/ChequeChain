@@ -23,7 +23,7 @@ class Transaction {
         const outputMap = {};
         outputMap[recipient] = amount;
         outputMap[senderWallet.publicKey] = senderWallet.balance - amount - previousPoolBalance;
-        //console.log("OutputMap subtracted amount "+amount+", and poolBalance " +previousPoolBalance )
+        console.log("OutputMap subtracted amount "+amount+", and poolBalance " +previousPoolBalance )
 
         return outputMap;
     }
@@ -59,9 +59,15 @@ class Transaction {
         this.date = date || "01/01/2020";
     }
 
-    static validTransaction({ transaction, finalAmount }) {
-        const { input: { address, amount, signature}, outputMap } = transaction;
-
+    static validTransaction( transaction ) {
+      //  console.log("from validTransaction: right under this line")
+        //console.log(transaction)
+        const input = transaction.input;
+        //console.log(input)
+        const outputMap = transaction.outputMap;
+        const address = input.address;
+        const amount = input.amount;
+        const signature = input.signature;
         const outputTotal = Object.values(outputMap)
             .reduce((total, outputAmount) => total + outputAmount);
 

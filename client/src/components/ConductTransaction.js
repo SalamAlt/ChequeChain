@@ -43,7 +43,7 @@ class ConductTransaction extends Component {
     conductTransaction = () => {//API insertion point #2
         const { recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date } = this.state;
 
-		axios.post('https://54.89.144.88/cheques', {
+		axios.post('https://chequechain.wasplabs.ca/cheques', {
 			balance: 1000,
 			date: date,
 			payee: recipient,

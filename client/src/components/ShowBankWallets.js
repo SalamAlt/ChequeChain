@@ -1,43 +1,33 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import Block from './Block';
 import Navbar from './Navbar'
 
 class ShowBankWallets extends Component {
-    state = { wallets: {}};
+    state = { wallets: [] };
 
-
-
-
+    //get bank wallets and map to a list or paragraph per bank
     componentDidMount() {
-        fetch(`${document.location.origin}/api/blocks`)
-        .then(response => response.json())
-        .then(json => this.setState({ wallets: json }));
+        fetch(`${document.location.origin}/api/bank-wallets`)
+            .then(response => { return response.json() })
+            .then(json => {
+                let wallets = Object.keys(json.output).map((inst) => {
+                    return (
+                        <ul key = {inst}>Bank wallet: {inst}, Balance: {json.output[inst]} </ul>
+                    )
+                })
+                this.setState({ wallets: wallets })           
+            })           
     }
 
     render() {
-        console.log('All baks', this.state);
-
-
-        const items = []
-        
-        for (let i = 0; i < this.state.wallets.length; i++)
-        {
-           
-                items.push(    <ul key = {wallet}>Bank wallet: {wallet}, Balance: {this.state.wallets[wallet]} </ul> )
-            
-        }
-
         return (
             <div>
                 <Navbar />
                 <h3>Bank wallets</h3>
-                {
-                {items}
-                }
+
+                {this.state.wallets}
+
             </div>
         );
     }
 }
-
 export default ShowBankWallets;
