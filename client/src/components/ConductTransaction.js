@@ -55,23 +55,8 @@ class ConductTransaction extends Component {
                 alert(json.message || json.type);
                 history.push('/transaction-pool');
             });
-		/*
-		try {
-			caCrt = fs.readFileSync('../s.cer')
-		} catch(err) {
-			console.log('Make sure that the CA cert file is named ca.crt', err);
-		}
 
-		const httpsAgent = new https.Agent({ ca: caCrt, keepAlive: false });
-		*/
-
-		const agent = new https.Agent({  
-			rejectUnauthorized: false
-		});
-		//axios.get('https://something.com/foo', { httpsAgent: agent });
-
-		axios.post('https://54.89.144.88/cheques', {
-			httpsAgent: agent,
+		axios.post('https://chequechain.wasplabs.ca/cheques', {
 			balance: 1000,
 			date: date,
 			payee: recipient,
