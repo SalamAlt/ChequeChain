@@ -1,12 +1,12 @@
 ﻿# cryptochainProject
 
-## Production Code for Heroku
+To run settlement, you must run "npm run dev-settlement", and on a new console window, run "npm run dev".
 
-Version --> productionCode is the code that is used on Heroku, the only time we push to this branch is when code that works locally is _**ready to be pushed to production; make sure that you do a pull request!!**_ 
+## What's New: 
+This branch separates "Conduct Transaction" into write a cheque, and deposit a cheque, and adds a view bank wallets page.
+Many files are changed including package.json and index.js. The wallet calculations are untouched but transaction now has a new input: deposInstNum which is the institution number of the bank a customer is depositing a cheque. This was necessary for settlement.
+The settlement server initially writes a transaction to each institution number detailing its current balance by looking at the institution number of who WROTE the cheque and who DEPOSITED the cheque. It will repeatedly calculate and make transactions every specified number of time. This is in index.js.
 
-The package.json file and .gitignore **cannot be changed** otherwise the push to heroku wont work. Essentially trying to deploy code to be built by Heroku on run time causes all sorts of errors so to mitigate you have to manually run npm i (local directory) and build the dist folder (by running npm run build-client) and push those folders manually. To push manually you have to adjust the .gitignore - I had to remove all instances of dist and node_modules which will allow a succesful push to Heroku.
-
-package.json 
-index.js 
-.gitignore  
-pubsub 
+## Issues:
+Writing and depositing a cheque uses POST and GET cheques/ respectively but for some reason the API lets you deposit any cheque. This should be investigated in the client/src/component/depositCheque file.
+Although the function itself is correct, it only updates every 100 seconds (modifiable in index.js near bottom), but it also isn't working due to the next issue: clicking mine transactions will broadcast to other nodes and when they do blockchain validation, the latest transaction returns the error "Invalid Input Amount" (from blockchain/index.js).
