@@ -66,7 +66,7 @@ class WriteCheque extends Component {
         return (
             <div className='ConductTransaction'>
 				 <Navbar />
-                <h3>Conduct a Transaction</h3>
+                <h3>Write a Cheque</h3>
                 <FormGroup>
 					<h4>Recipient</h4>
                     <FormControl
