@@ -102,7 +102,7 @@ app.post('/api/transact', (req, res) => {
     
     pubsub.broadcastTransaction(transaction);
     
-    res.json({ type: 'sucess', transaction });
+    res.json({ type: 'success', transaction });
 });
 
 app.get('/api/transaction-pool-map', (req, res) => {
@@ -253,7 +253,7 @@ app.listen(PORT, () => {
 });
 
 
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
+//process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 //clearance server every set time SHOULD check all transaction numbers finstNum
 //and then update those banks cryptocurrency...
 //WHAT WE NEED: modify DEPOSITED transactions (even if it's not mined yet) to 
