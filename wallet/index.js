@@ -15,7 +15,7 @@ class Wallet {
         return this.keyPair.sign(cryptoHash(data))
     }
 
-    createTransaction({ recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date, chain, pool }){
+    createTransaction({ recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date, chain, pool, deposInstNum }){
         let previousPoolBalance = 0;
         
         if (chain) {
@@ -36,8 +36,8 @@ class Wallet {
             throw new Error('Amount exceeds balance');
         }
 
-        return new Transaction({ senderWallet: this, recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, date, clientName, previousPoolBalance });
-    }
+        return new Transaction({ senderWallet: this, recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, date, clientName, previousPoolBalance, deposInstNum });
+   }
 
     static calculateBalance({ chain, address }) {
         let hasConductedTransaction = false;

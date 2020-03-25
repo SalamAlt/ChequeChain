@@ -69,8 +69,16 @@ class Blockchain {
                         address: transaction.input.address
                     });
 
-                    if (transaction.input.amount !== trueBalance) {
+                    //if (transaction.institutionNumber != -1 && transaction.outputMap[transaction.input.address] !== trueBalance) {
+                    //below is original except i added institutionNumber check
+                   //error below for when a node tries broadcasting a new blockchain after we click Mine
+                    if (transaction.institutionNumber != -1 && transaction.outputMap[transaction.input.address] !== trueBalance) {
+                        
                         console.error('Invalid input amount');
+                        console.error(trueBalance);
+                        console.error(transaction.input.amount);
+                        console.error(transaction)
+                        console.error('above is the details for invalid input amount');
                         return false;
                     }
 

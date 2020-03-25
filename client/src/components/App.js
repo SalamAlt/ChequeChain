@@ -24,8 +24,10 @@ class App extends Component {
                 </div>
                 <br />
                 <div><Link to='/blocks'>Blocks</Link></div>
-                <div><Link to='/conduct-transaction'>Conduct a Transaction</Link></div>
+                <div><Link to='/write-cheque'>Write a cheque</Link></div>
+                <div><Link to='/deposit-cheque'>Deposit a cheque</Link></div>
                 <div><Link to='/transaction-pool'>Transaction Pool</Link></div>
+                <div><Link to='/show-bank-wallets'>Show Bank Wallets</Link></div>
                 <br />
                 <div className ='WalletInfo'>
                     <div>Address: {address}</div>
