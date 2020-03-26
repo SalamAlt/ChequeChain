@@ -15,7 +15,7 @@ class Transaction {
 		this.accountNumber = accountNumber || Math.floor(Math.random() * 1000);
 		this.clientName = clientName || "Random Person";
         this.date = date || Date.now();
-        this.deposInstNum = deposInstNum | -1
+        this.deposInstNum = deposInstNum || -1
         this.previousPoolBalance = previousPoolBalance || 0;
         this.outputMap = outputMap || this.createOutputMap({ senderWallet, recipient, amount, previousPoolBalance });
         this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap});

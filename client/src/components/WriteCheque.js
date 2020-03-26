@@ -42,6 +42,14 @@ class WriteCheque extends Component {
 
     conductTransaction = () => {//API insertion point #2
         const { recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date } = this.state;
+		let balance = 1000;
+		fetch(`${document.location.origin}/api/wallet-info`)
+		.then(response => { return response.json() })
+		.then(json => {
+			balance = json.balance;		      
+			console.log(balance);
+		})   
+
 
 		if(isNaN(chequeID) || isNaN(amount) || isNaN(transitNumber) || isNaN(institutionNumber) || isNaN(accountNumber)){
 			alert("One more of your fields contains characters/special characters.");
@@ -71,7 +79,7 @@ class WriteCheque extends Component {
 		}//end of if block
 		else {
 			axios.post('https://chequechain.wasplabs.ca/cheques', {
-				balance: 1000,
+				balance: balance,
 				date: date,
 				payee: recipient,
 				payorSign: clientName,

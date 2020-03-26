@@ -40,10 +40,22 @@ class Blockchain {
     }
 
     validTransactionData({ chain }) {
+      let sameChain = true;   //signifies part of the new chain from genesis to some block is the same as the original chain
         for (let i=1; i<chain.length; i++) {
             const block = chain[i];
             const transactionSet = new Set();
             let rewardTransactionCount = 0;
+
+            //check if this block already exists in the original blockchain
+            if (i < this.chain.length && sameChain)
+            {
+                JSON.stringify(block) === JSON.stringify(this.chain[i]) 
+                continue;   //skip to next block
+            }  
+            else
+            {
+                sameChain = false;
+            }          
 
             for (let transaction of block.data) {
                 if (transaction.input.address === REWARD_INPUT.address) {
@@ -69,14 +81,16 @@ class Blockchain {
                         address: transaction.input.address
                     });
 
+                    console.log("truebalance, and input.amount are:")
+                    console.error(trueBalance);
+                    console.error(transaction.input.amount);
+
                     //if (transaction.institutionNumber != -1 && transaction.outputMap[transaction.input.address] !== trueBalance) {
                     //below is original except i added institutionNumber check
                    //error below for when a node tries broadcasting a new blockchain after we click Mine
-                    if (transaction.institutionNumber != -1 && transaction.outputMap[transaction.input.address] !== trueBalance) {
+                    if (transaction.institutionNumber != -1 && transaction.input.amount !== trueBalance) {
                         
                         console.error('Invalid input amount');
-                        console.error(trueBalance);
-                        console.error(transaction.input.amount);
                         console.error(transaction)
                         console.error('above is the details for invalid input amount');
                         return false;

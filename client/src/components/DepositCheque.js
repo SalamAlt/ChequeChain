@@ -6,7 +6,7 @@ const axios = require('axios');
 import Navbar from './Navbar'
 
 class DepositCheque extends Component {
-    state = { recipient: '', amount: '', chequeID: '', transitNumber: '', institutionNumber: '', accountNumber: '', clientName: '', date: ''};
+    state = { recipient: '', amount: '', chequeID: '', transitNumber: '', institutionNumber: '', accountNumber: '', clientName: '', date: '', deposInstNum: -1};
 
     updateRecipient = event => {
         this.setState({ recipient: event.target.value })
@@ -40,9 +40,21 @@ class DepositCheque extends Component {
 		this.setState({ date: event.target.value })
 	}
 
+	componentDidMount() {
+		fetch(`${document.location.origin}/api/instNum`)
+		.then(response => { return response.json() })
+		.then(json => {
+			console.log(json)
+			this.setState({ deposInstNum: json })   
+
+	
+	})
+
+
+	}
     DepositCheque = () => {//API insertion point #2
-        const { recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date } = this.state;
-        const deposInstNum = process.env.INST_NUM;
+		const { recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date, deposInstNum  } = this.state;
+console.log("deposInst is "+deposInstNum)
 
         axios.get('https://chequechain.wasplabs.ca/cheques', {
             chequeId: chequeID,
