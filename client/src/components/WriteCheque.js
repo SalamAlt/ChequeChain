@@ -43,23 +43,51 @@ class WriteCheque extends Component {
     conductTransaction = () => {//API insertion point #2
         const { recipient, amount, chequeID, transitNumber, institutionNumber, accountNumber, clientName, date } = this.state;
 
-		axios.post('https://chequechain.wasplabs.ca/cheques', {
-			balance: 1000,
-			date: date,
-			payee: recipient,
-			payorSign: clientName,
-			chequeId: chequeID,
-			finInstNum: institutionNumber,
-			tranNum: transitNumber,
-			accountId: accountNumber,
-			amount: amount
-		}).then(response => {
-			console.log(response);
-			alert("Successfully created a cheque.")
-            history.push('/');
-		}).catch(err => {
-			console.log(err);
-		});
+		if(isNaN(chequeID) || isNaN(amount) || isNaN(transitNumber) || isNaN(institutionNumber) || isNaN(accountNumber)){
+			alert("One more of your fields contains characters/special characters.");
+		} else if(!clientName.match(/^[a-zA-Z\s]+$/) || !recipient.match(/^[a-zA-Z\s]+$/)) {
+			if(!clientName.match(/^[a-zA-Z\s]+$/))
+				alert("Please make sure the client name only contains characters.");
+			else 
+				alert("Please make sure the recipient only contains characters.");
+		} else if(chequeID === "" || recipient === "" || amount === "" || transitNumber === "" || institutionNumber === "" || accountNumber === "" || clientName === ""){
+			alert("Please check to see if your fields contain information.");
+		} else if(chequeID.length != 3 || transitNumber.length != 5 || institutionNumber.length != 3 || accountNumber.length != 7){
+			if(chequeID.length != 3)
+				alert("Please make sure the cheque ID has three numbers.");
+			else if(transitNumber.length != 5)
+				alert("Please make sure transit number has five numbers.");
+			else if(institutionNumber.length != 3)
+				alert("Please make sure the institution number has three numbers.");
+			else
+				alert("Please make sure the account number has seven numbers.");
+		} else if(institutionNumber.match(/(.)\1{2,}/) || accountNumber.match(/(.)\1{3,}/) || transitNumber.match(/(.)\1{3,}/)){
+			if(accountNumber.match(/(.)\1{3,}/))
+				alert("Please make sure the account number does not contain repeating numbers.");
+			else if(institutionNumber.match(/(.)\1{2,}/))
+				alert("Please make sure the institution number does not contain repeating numbers.");
+			else
+				alert("Please make sure the transit number does not contain repeating numbers.");
+		}//end of if block
+		else {
+			axios.post('https://chequechain.wasplabs.ca/cheques', {
+				balance: 1000,
+				date: date,
+				payee: recipient,
+				payorSign: clientName,
+				chequeId: chequeID,
+				finInstNum: institutionNumber,
+				tranNum: transitNumber,
+				accountId: accountNumber,
+				amount: amount
+			}).then(response => {
+				console.log(response);
+				alert("Successfully created a cheque.")
+				history.push('/');
+			}).catch(err => {
+				console.log(err);
+			});
+		} //end of else block
     }
 
     render() {
