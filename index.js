@@ -10,7 +10,7 @@ const TransactionMiner = require('./app/transaction-miner');
 var Users = require('./routes/Users');
 
 const axios = require('axios');
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+//process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const app = express();
 
 //salam 5 lines
