@@ -42,7 +42,6 @@ class Wallet {
     static calculateBalance({ chain, address }) {
         let hasConductedTransaction = false;
         let outputsTotal = 0;
-        console.log("chain length: "+chain.length);
         for (let i=chain.length-1; i>0; i--){
             const block = chain[i];
             for (let j = 1; j<=block.data.length; j++){
