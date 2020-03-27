@@ -21,7 +21,7 @@ const Transaction = ({ transaction })  => {
             }
             <div>Client Name: {clientName}</div>
             <div>Cheque ID: {chequeID}</div>
-            <div>Cheque Date: {date}</div>
+            <div>Cheque Date: {new Date(date).toLocaleString()}</div>
             <div>Account Number: {accountNumber}</div>
             <div>Transit Number: {transitNumber}</div>
             <div>Institution Number: {institutionNumber}</div>
