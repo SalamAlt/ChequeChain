@@ -72,7 +72,7 @@ class TransactionPool extends Component {
                     })
                 }
                 <hr />
-                <div><Link to='/conduct-transaction'>Conduct another transaction</Link></div>
+                <div><Link to='/deposit-cheque'>Deposit Another Cheque</Link></div>
                 <br/>
                 <Button 
                     bsStyle="danger"
