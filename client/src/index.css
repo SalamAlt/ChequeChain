@@ -71,3 +71,24 @@ a, a:hover {
 .Transaction {
     padding: 5;
 }
+
+
+.jumbo {
+    background: url('./assets/banner.png') no-repeat center right;
+    background-size: 85% 100%;
+    height: 250px;
+    position: relative;
+    background-color: white;
+    z-index: 2;
+}
+/*
+.overlay {
+    background-color: #000;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: -1;
+}*/
