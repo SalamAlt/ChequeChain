@@ -19,7 +19,7 @@ class Landing extends Component {
         </li>
         <li className="nav-item">
           <Link to="/register" className="nav-link">
-            <a className="navbar-brand text-uppercase ml-5">Register&nbsp;<i class="fas fa-sign-in-alt"></i></a>
+            <a className="navbar-brand text-uppercase ml-5">Register&nbsp;<i class="fas fa-user-plus"></i></a>
           </Link>
         </li>
       </ul>
