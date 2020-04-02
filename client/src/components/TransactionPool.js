@@ -43,6 +43,18 @@ class TransactionPool extends Component {
         });
     }
 
+    clearInvalidTransactions = () => {
+        fetch(`${document.location.origin}/api/clear-invalid-transactions`)
+        .then(response => {
+            if (response.status === 200) {
+                alert('Successfully cleared invalid pool transactions');
+                history.push('/transaction-pool');
+            } else {
+                alert('There were no invalid transactions to clear');
+            }
+        });
+    }
+
     componentDidMount() {
         this.fetchTransactionPoolMap();
 
@@ -79,6 +91,14 @@ class TransactionPool extends Component {
                     onClick={this.fetchMineTransactions}
                     >
                         Submit Cheques For Clearance
+                </Button>
+                <br/>
+                <Button 
+                    bsStyle="danger"
+                    onClick={this.clearInvalidTransactions}
+                    >
+                        Clear Invalid Transactions 
+                            From The Pool
                 </Button>
             </div>
         )

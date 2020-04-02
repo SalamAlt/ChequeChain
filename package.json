@@ -9,10 +9,7 @@
     "dev": "cross-env INST_NUM=0 npm run dev-client & npm run start-redis && cross-env ENV='development' nodemon index.js",
     "devw": "npm run start-redis-w && nodemon index.js",
     "dev-peer": "cross-env GENERATE_PEER_PORT='true' ENV='development' nodemon index.js",
-
-
-    "dev-settlement": "cross-env SETTLEMENT_SERVER='true' npm run dev-peer" ,
-
+    "dev-settlement": "cross-env SETTLEMENT_SERVER='true' npm run dev-peer",
     "start-redis": "redis-server --daemonize yes",
     "start-redis-w": "/redis/redis-server.exe",
     "build-client": "parcel build client/src/index.html --out-dir client/dist",
