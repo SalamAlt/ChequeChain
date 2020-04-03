@@ -324,7 +324,7 @@ checkPropTypes.resetWarningCache = function () {
 
 module.exports = checkPropTypes;
 },{"./lib/ReactPropTypesSecret":"../../node_modules/prop-types/lib/ReactPropTypesSecret.js"}],"../../node_modules/react/cjs/react.development.js":[function(require,module,exports) {
-/** @license React v16.13.1
+/** @license React v16.13.0
  * react.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -342,7 +342,7 @@ if ("development" !== "production") {
 
     var checkPropTypes = require('prop-types/checkPropTypes');
 
-    var ReactVersion = '16.13.1'; // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
+    var ReactVersion = '16.13.0'; // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
     // nor polyfill, then a plain number is used for performance.
 
     var hasSymbol = typeof Symbol === 'function' && Symbol.for;
@@ -2209,7 +2209,7 @@ if ("development" === 'production') {
   module.exports = require('./cjs/react.development.js');
 }
 },{"./cjs/react.development.js":"../../node_modules/react/cjs/react.development.js"}],"../../node_modules/scheduler/cjs/scheduler.development.js":[function(require,module,exports) {
-/** @license React v0.19.1
+/** @license React v0.19.0
  * scheduler.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -3072,7 +3072,7 @@ if ("development" === 'production') {
   module.exports = require('./cjs/scheduler.development.js');
 }
 },{"./cjs/scheduler.development.js":"../../node_modules/scheduler/cjs/scheduler.development.js"}],"../../node_modules/scheduler/cjs/scheduler-tracing.development.js":[function(require,module,exports) {
-/** @license React v0.19.1
+/** @license React v0.19.0
  * scheduler-tracing.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -3428,7 +3428,7 @@ if ("development" === 'production') {
   module.exports = require('./cjs/scheduler-tracing.development.js');
 }
 },{"./cjs/scheduler-tracing.development.js":"../../node_modules/scheduler/cjs/scheduler-tracing.development.js"}],"../../node_modules/react-dom/cjs/react-dom.development.js":[function(require,module,exports) {
-/** @license React v16.13.1
+/** @license React v16.13.0
  * react-dom.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -3876,9 +3876,280 @@ if ("development" !== "production") {
     var FundamentalComponent = 20;
     var ScopeComponent = 21;
     var Block = 22;
+    var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
+
+    function describeComponentFrame(name, source, ownerName) {
+      var sourceInfo = '';
+
+      if (source) {
+        var path = source.fileName;
+        var fileName = path.replace(BEFORE_SLASH_RE, '');
+        {
+          // In DEV, include code for a common special case:
+          // prefer "folder/index.js" instead of just "index.js".
+          if (/^index\./.test(fileName)) {
+            var match = path.match(BEFORE_SLASH_RE);
+
+            if (match) {
+              var pathBeforeSlash = match[1];
+
+              if (pathBeforeSlash) {
+                var folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
+                fileName = folderName + '/' + fileName;
+              }
+            }
+          }
+        }
+        sourceInfo = ' (at ' + fileName + ':' + source.lineNumber + ')';
+      } else if (ownerName) {
+        sourceInfo = ' (created by ' + ownerName + ')';
+      }
+
+      return '\n    in ' + (name || 'Unknown') + sourceInfo;
+    } // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
+    // nor polyfill, then a plain number is used for performance.
+
+
+    var hasSymbol = typeof Symbol === 'function' && Symbol.for;
+    var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
+    var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
+    var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
+    var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
+    var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
+    var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
+    var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
+
+    var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
+    var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
+    var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
+    var REACT_SUSPENSE_LIST_TYPE = hasSymbol ? Symbol.for('react.suspense_list') : 0xead8;
+    var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
+    var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
+    var REACT_BLOCK_TYPE = hasSymbol ? Symbol.for('react.block') : 0xead9;
+    var MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+    var FAUX_ITERATOR_SYMBOL = '@@iterator';
+
+    function getIteratorFn(maybeIterable) {
+      if (maybeIterable === null || typeof maybeIterable !== 'object') {
+        return null;
+      }
+
+      var maybeIterator = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL];
+
+      if (typeof maybeIterator === 'function') {
+        return maybeIterator;
+      }
+
+      return null;
+    }
+
+    var Uninitialized = -1;
+    var Pending = 0;
+    var Resolved = 1;
+    var Rejected = 2;
+
+    function refineResolvedLazyComponent(lazyComponent) {
+      return lazyComponent._status === Resolved ? lazyComponent._result : null;
+    }
+
+    function initializeLazyComponentType(lazyComponent) {
+      if (lazyComponent._status === Uninitialized) {
+        lazyComponent._status = Pending;
+        var ctor = lazyComponent._ctor;
+        var thenable = ctor();
+        lazyComponent._result = thenable;
+        thenable.then(function (moduleObject) {
+          if (lazyComponent._status === Pending) {
+            var defaultExport = moduleObject.default;
+            {
+              if (defaultExport === undefined) {
+                error('lazy: Expected the result of a dynamic import() call. ' + 'Instead received: %s\n\nYour code should look like: \n  ' + "const MyComponent = lazy(() => import('./MyComponent'))", moduleObject);
+              }
+            }
+            lazyComponent._status = Resolved;
+            lazyComponent._result = defaultExport;
+          }
+        }, function (error) {
+          if (lazyComponent._status === Pending) {
+            lazyComponent._status = Rejected;
+            lazyComponent._result = error;
+          }
+        });
+      }
+    }
+
+    function getWrappedName(outerType, innerType, wrapperName) {
+      var functionName = innerType.displayName || innerType.name || '';
+      return outerType.displayName || (functionName !== '' ? wrapperName + "(" + functionName + ")" : wrapperName);
+    }
+
+    function getComponentName(type) {
+      if (type == null) {
+        // Host root, text node or just invalid type.
+        return null;
+      }
+
+      {
+        if (typeof type.tag === 'number') {
+          error('Received an unexpected object in getComponentName(). ' + 'This is likely a bug in React. Please file an issue.');
+        }
+      }
+
+      if (typeof type === 'function') {
+        return type.displayName || type.name || null;
+      }
+
+      if (typeof type === 'string') {
+        return type;
+      }
+
+      switch (type) {
+        case REACT_FRAGMENT_TYPE:
+          return 'Fragment';
+
+        case REACT_PORTAL_TYPE:
+          return 'Portal';
+
+        case REACT_PROFILER_TYPE:
+          return "Profiler";
+
+        case REACT_STRICT_MODE_TYPE:
+          return 'StrictMode';
+
+        case REACT_SUSPENSE_TYPE:
+          return 'Suspense';
+
+        case REACT_SUSPENSE_LIST_TYPE:
+          return 'SuspenseList';
+      }
+
+      if (typeof type === 'object') {
+        switch (type.$$typeof) {
+          case REACT_CONTEXT_TYPE:
+            return 'Context.Consumer';
+
+          case REACT_PROVIDER_TYPE:
+            return 'Context.Provider';
+
+          case REACT_FORWARD_REF_TYPE:
+            return getWrappedName(type, type.render, 'ForwardRef');
+
+          case REACT_MEMO_TYPE:
+            return getComponentName(type.type);
+
+          case REACT_BLOCK_TYPE:
+            return getComponentName(type.render);
+
+          case REACT_LAZY_TYPE:
+            {
+              var thenable = type;
+              var resolvedThenable = refineResolvedLazyComponent(thenable);
+
+              if (resolvedThenable) {
+                return getComponentName(resolvedThenable);
+              }
+
+              break;
+            }
+        }
+      }
+
+      return null;
+    }
+
+    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
+    function describeFiber(fiber) {
+      switch (fiber.tag) {
+        case HostRoot:
+        case HostPortal:
+        case HostText:
+        case Fragment:
+        case ContextProvider:
+        case ContextConsumer:
+          return '';
+
+        default:
+          var owner = fiber._debugOwner;
+          var source = fiber._debugSource;
+          var name = getComponentName(fiber.type);
+          var ownerName = null;
+
+          if (owner) {
+            ownerName = getComponentName(owner.type);
+          }
+
+          return describeComponentFrame(name, source, ownerName);
+      }
+    }
+
+    function getStackByFiberInDevAndProd(workInProgress) {
+      var info = '';
+      var node = workInProgress;
+
+      do {
+        info += describeFiber(node);
+        node = node.return;
+      } while (node);
+
+      return info;
+    }
+
+    var current = null;
+    var phase = null;
+
+    function getCurrentFiberOwnerNameInDevOrNull() {
+      {
+        if (current === null) {
+          return null;
+        }
+
+        var owner = current._debugOwner;
+
+        if (owner !== null && typeof owner !== 'undefined') {
+          return getComponentName(owner.type);
+        }
+      }
+      return null;
+    }
+
+    function getCurrentFiberStackInDev() {
+      {
+        if (current === null) {
+          return '';
+        } // Safe because if current fiber exists, we are reconciling,
+        // and it is guaranteed to be the work-in-progress version.
+
+
+        return getStackByFiberInDevAndProd(current);
+      }
+    }
+
+    function resetCurrentFiber() {
+      {
+        ReactDebugCurrentFrame.getCurrentStack = null;
+        current = null;
+        phase = null;
+      }
+    }
+
+    function setCurrentFiber(fiber) {
+      {
+        ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
+        current = fiber;
+        phase = null;
+      }
+    }
+
+    function setCurrentPhase(lifeCyclePhase) {
+      {
+        phase = lifeCyclePhase;
+      }
+    }
     /**
      * Injectable ordering of event plugins.
      */
+
 
     var eventPluginOrder = null;
     /**
@@ -4581,9 +4852,9 @@ if ("development" !== "production") {
       null, // attributeNamespace
       true);
     });
-    var ReactDebugCurrentFrame = null;
+    var ReactDebugCurrentFrame$1 = null;
     {
-      ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+      ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
     } // A javascript: URL can contain leading C0 control or \u0020 SPACE,
     // and any newline or tab are filtered out as if they're not part of the URL.
     // https://url.spec.whatwg.org/#url-parsing
@@ -4786,277 +5057,6 @@ if ("development" !== "production") {
         } else {
           node.setAttribute(attributeName, attributeValue);
         }
-      }
-    }
-
-    var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-
-    function describeComponentFrame(name, source, ownerName) {
-      var sourceInfo = '';
-
-      if (source) {
-        var path = source.fileName;
-        var fileName = path.replace(BEFORE_SLASH_RE, '');
-        {
-          // In DEV, include code for a common special case:
-          // prefer "folder/index.js" instead of just "index.js".
-          if (/^index\./.test(fileName)) {
-            var match = path.match(BEFORE_SLASH_RE);
-
-            if (match) {
-              var pathBeforeSlash = match[1];
-
-              if (pathBeforeSlash) {
-                var folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
-                fileName = folderName + '/' + fileName;
-              }
-            }
-          }
-        }
-        sourceInfo = ' (at ' + fileName + ':' + source.lineNumber + ')';
-      } else if (ownerName) {
-        sourceInfo = ' (created by ' + ownerName + ')';
-      }
-
-      return '\n    in ' + (name || 'Unknown') + sourceInfo;
-    } // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-    // nor polyfill, then a plain number is used for performance.
-
-
-    var hasSymbol = typeof Symbol === 'function' && Symbol.for;
-    var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
-    var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
-    var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
-    var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
-    var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
-    var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
-    var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-
-    var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
-    var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
-    var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
-    var REACT_SUSPENSE_LIST_TYPE = hasSymbol ? Symbol.for('react.suspense_list') : 0xead8;
-    var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
-    var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
-    var REACT_BLOCK_TYPE = hasSymbol ? Symbol.for('react.block') : 0xead9;
-    var MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
-    var FAUX_ITERATOR_SYMBOL = '@@iterator';
-
-    function getIteratorFn(maybeIterable) {
-      if (maybeIterable === null || typeof maybeIterable !== 'object') {
-        return null;
-      }
-
-      var maybeIterator = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL];
-
-      if (typeof maybeIterator === 'function') {
-        return maybeIterator;
-      }
-
-      return null;
-    }
-
-    var Uninitialized = -1;
-    var Pending = 0;
-    var Resolved = 1;
-    var Rejected = 2;
-
-    function refineResolvedLazyComponent(lazyComponent) {
-      return lazyComponent._status === Resolved ? lazyComponent._result : null;
-    }
-
-    function initializeLazyComponentType(lazyComponent) {
-      if (lazyComponent._status === Uninitialized) {
-        lazyComponent._status = Pending;
-        var ctor = lazyComponent._ctor;
-        var thenable = ctor();
-        lazyComponent._result = thenable;
-        thenable.then(function (moduleObject) {
-          if (lazyComponent._status === Pending) {
-            var defaultExport = moduleObject.default;
-            {
-              if (defaultExport === undefined) {
-                error('lazy: Expected the result of a dynamic import() call. ' + 'Instead received: %s\n\nYour code should look like: \n  ' + "const MyComponent = lazy(() => import('./MyComponent'))", moduleObject);
-              }
-            }
-            lazyComponent._status = Resolved;
-            lazyComponent._result = defaultExport;
-          }
-        }, function (error) {
-          if (lazyComponent._status === Pending) {
-            lazyComponent._status = Rejected;
-            lazyComponent._result = error;
-          }
-        });
-      }
-    }
-
-    function getWrappedName(outerType, innerType, wrapperName) {
-      var functionName = innerType.displayName || innerType.name || '';
-      return outerType.displayName || (functionName !== '' ? wrapperName + "(" + functionName + ")" : wrapperName);
-    }
-
-    function getComponentName(type) {
-      if (type == null) {
-        // Host root, text node or just invalid type.
-        return null;
-      }
-
-      {
-        if (typeof type.tag === 'number') {
-          error('Received an unexpected object in getComponentName(). ' + 'This is likely a bug in React. Please file an issue.');
-        }
-      }
-
-      if (typeof type === 'function') {
-        return type.displayName || type.name || null;
-      }
-
-      if (typeof type === 'string') {
-        return type;
-      }
-
-      switch (type) {
-        case REACT_FRAGMENT_TYPE:
-          return 'Fragment';
-
-        case REACT_PORTAL_TYPE:
-          return 'Portal';
-
-        case REACT_PROFILER_TYPE:
-          return "Profiler";
-
-        case REACT_STRICT_MODE_TYPE:
-          return 'StrictMode';
-
-        case REACT_SUSPENSE_TYPE:
-          return 'Suspense';
-
-        case REACT_SUSPENSE_LIST_TYPE:
-          return 'SuspenseList';
-      }
-
-      if (typeof type === 'object') {
-        switch (type.$$typeof) {
-          case REACT_CONTEXT_TYPE:
-            return 'Context.Consumer';
-
-          case REACT_PROVIDER_TYPE:
-            return 'Context.Provider';
-
-          case REACT_FORWARD_REF_TYPE:
-            return getWrappedName(type, type.render, 'ForwardRef');
-
-          case REACT_MEMO_TYPE:
-            return getComponentName(type.type);
-
-          case REACT_BLOCK_TYPE:
-            return getComponentName(type.render);
-
-          case REACT_LAZY_TYPE:
-            {
-              var thenable = type;
-              var resolvedThenable = refineResolvedLazyComponent(thenable);
-
-              if (resolvedThenable) {
-                return getComponentName(resolvedThenable);
-              }
-
-              break;
-            }
-        }
-      }
-
-      return null;
-    }
-
-    var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
-
-    function describeFiber(fiber) {
-      switch (fiber.tag) {
-        case HostRoot:
-        case HostPortal:
-        case HostText:
-        case Fragment:
-        case ContextProvider:
-        case ContextConsumer:
-          return '';
-
-        default:
-          var owner = fiber._debugOwner;
-          var source = fiber._debugSource;
-          var name = getComponentName(fiber.type);
-          var ownerName = null;
-
-          if (owner) {
-            ownerName = getComponentName(owner.type);
-          }
-
-          return describeComponentFrame(name, source, ownerName);
-      }
-    }
-
-    function getStackByFiberInDevAndProd(workInProgress) {
-      var info = '';
-      var node = workInProgress;
-
-      do {
-        info += describeFiber(node);
-        node = node.return;
-      } while (node);
-
-      return info;
-    }
-
-    var current = null;
-    var isRendering = false;
-
-    function getCurrentFiberOwnerNameInDevOrNull() {
-      {
-        if (current === null) {
-          return null;
-        }
-
-        var owner = current._debugOwner;
-
-        if (owner !== null && typeof owner !== 'undefined') {
-          return getComponentName(owner.type);
-        }
-      }
-      return null;
-    }
-
-    function getCurrentFiberStackInDev() {
-      {
-        if (current === null) {
-          return '';
-        } // Safe because if current fiber exists, we are reconciling,
-        // and it is guaranteed to be the work-in-progress version.
-
-
-        return getStackByFiberInDevAndProd(current);
-      }
-    }
-
-    function resetCurrentFiber() {
-      {
-        ReactDebugCurrentFrame$1.getCurrentStack = null;
-        current = null;
-        isRendering = false;
-      }
-    }
-
-    function setCurrentFiber(fiber) {
-      {
-        ReactDebugCurrentFrame$1.getCurrentStack = getCurrentFiberStackInDev;
-        current = fiber;
-        isRendering = false;
-      }
-    }
-
-    function setIsRendering(rendering) {
-      {
-        isRendering = rendering;
       }
     } // Flow does not allow string concatenation of most non-string types. To work
     // around this limitation, we use an opaque type that can only be obtained by
@@ -6807,7 +6807,7 @@ if ("development" !== "production") {
       }
 
       var eventName = 'on' + eventNameSuffix;
-      var isSupported = (eventName in document);
+      var isSupported = eventName in document;
 
       if (!isSupported) {
         var element = document.createElement('div');
@@ -9063,6 +9063,7 @@ if ("development" !== "production") {
     }
 
     var didWarnInvalidHydration = false;
+    var didWarnShadyDOM = false;
     var DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
     var SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
     var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
@@ -9375,6 +9376,11 @@ if ("development" !== "production") {
       var isCustomComponentTag = isCustomComponent(tag, rawProps);
       {
         validatePropertiesInDevelopment(tag, rawProps);
+
+        if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+          error('%s is using shady DOM. Using shady DOM with React can ' + 'cause things to break subtly.', getCurrentFiberOwnerNameInDevOrNull() || 'A component');
+          didWarnShadyDOM = true;
+        }
       } // TODO: Make sure that we check isMounted before firing any of these events.
 
       var props;
@@ -9726,6 +9732,11 @@ if ("development" !== "production") {
         suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
         isCustomComponentTag = isCustomComponent(tag, rawProps);
         validatePropertiesInDevelopment(tag, rawProps);
+
+        if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+          error('%s is using shady DOM. Using shady DOM with React can ' + 'cause things to break subtly.', getCurrentFiberOwnerNameInDevOrNull() || 'A component');
+          didWarnShadyDOM = true;
+        }
       } // TODO: Make sure that we check isMounted before firing any of these events.
 
       switch (tag) {
@@ -14284,9 +14295,15 @@ if ("development" !== "production") {
         }
 
         var childContext;
+        {
+          setCurrentPhase('getChildContext');
+        }
         startPhaseTimer(fiber, 'getChildContext');
         childContext = instance.getChildContext();
         stopPhaseTimer();
+        {
+          setCurrentPhase(null);
+        }
 
         for (var contextKey in childContext) {
           if (!(contextKey in childContextTypes)) {
@@ -20124,6 +20141,7 @@ if ("development" !== "production") {
     var didWarnAboutGetDerivedStateOnFunctionComponent;
     var didWarnAboutFunctionRefs;
     var didWarnAboutReassigningProps;
+    var didWarnAboutMaxDuration;
     var didWarnAboutRevealOrder;
     var didWarnAboutTailOptions;
     {
@@ -20133,6 +20151,7 @@ if ("development" !== "production") {
       didWarnAboutGetDerivedStateOnFunctionComponent = {};
       didWarnAboutFunctionRefs = {};
       didWarnAboutReassigningProps = false;
+      didWarnAboutMaxDuration = false;
       didWarnAboutRevealOrder = {};
       didWarnAboutTailOptions = {};
     }
@@ -20194,7 +20213,7 @@ if ("development" !== "production") {
       prepareToReadContext(workInProgress, renderExpirationTime);
       {
         ReactCurrentOwner$1.current = workInProgress;
-        setIsRendering(true);
+        setCurrentPhase('render');
         nextChildren = renderWithHooks(current, workInProgress, render, nextProps, ref, renderExpirationTime);
 
         if (workInProgress.mode & StrictMode) {
@@ -20204,7 +20223,7 @@ if ("development" !== "production") {
           }
         }
 
-        setIsRendering(false);
+        setCurrentPhase(null);
       }
 
       if (current !== null && !didReceiveUpdate) {
@@ -20401,7 +20420,7 @@ if ("development" !== "production") {
       prepareToReadContext(workInProgress, renderExpirationTime);
       {
         ReactCurrentOwner$1.current = workInProgress;
-        setIsRendering(true);
+        setCurrentPhase('render');
         nextChildren = renderWithHooks(current, workInProgress, Component, nextProps, context, renderExpirationTime);
 
         if (workInProgress.mode & StrictMode) {
@@ -20411,7 +20430,7 @@ if ("development" !== "production") {
           }
         }
 
-        setIsRendering(false);
+        setCurrentPhase(null);
       }
 
       if (current !== null && !didReceiveUpdate) {
@@ -20523,14 +20542,14 @@ if ("development" !== "production") {
         }
       } else {
         {
-          setIsRendering(true);
+          setCurrentPhase('render');
           nextChildren = instance.render();
 
           if (workInProgress.mode & StrictMode) {
             instance.render();
           }
 
-          setIsRendering(false);
+          setCurrentPhase(null);
         }
       } // React DevTools reads this flag.
 
@@ -20833,10 +20852,8 @@ if ("development" !== "production") {
           ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, null);
         }
 
-        setIsRendering(true);
         ReactCurrentOwner$1.current = workInProgress;
         value = renderWithHooks(null, workInProgress, Component, props, context, renderExpirationTime);
-        setIsRendering(false);
       } // React DevTools reads this flag.
 
       workInProgress.effectTag |= PerformedWork;
@@ -20990,7 +21007,15 @@ if ("development" !== "production") {
       }
 
       suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
-      pushSuspenseContext(workInProgress, suspenseContext); // This next part is a bit confusing. If the children timeout, we switch to
+      pushSuspenseContext(workInProgress, suspenseContext);
+      {
+        if ('maxDuration' in nextProps) {
+          if (!didWarnAboutMaxDuration) {
+            didWarnAboutMaxDuration = true;
+            error('maxDuration has been removed from React. ' + 'Remove the maxDuration prop.');
+          }
+        }
+      } // This next part is a bit confusing. If the children timeout, we switch to
       // showing the fallback children in place of the "primary" children.
       // However, we don't want to delete the primary children because then their
       // state will be lost (both the React state and the host state, e.g.
@@ -21627,9 +21652,9 @@ if ("development" !== "production") {
       var newChildren;
       {
         ReactCurrentOwner$1.current = workInProgress;
-        setIsRendering(true);
+        setCurrentPhase('render');
         newChildren = render(newValue);
-        setIsRendering(false);
+        setCurrentPhase(null);
       } // React DevTools reads this flag.
 
       workInProgress.effectTag |= PerformedWork;
@@ -24095,11 +24120,9 @@ if ("development" !== "production") {
           var currentSource = sourceFiber.alternate;
 
           if (currentSource) {
-            sourceFiber.updateQueue = currentSource.updateQueue;
             sourceFiber.memoizedState = currentSource.memoizedState;
             sourceFiber.expirationTime = currentSource.expirationTime;
           } else {
-            sourceFiber.updateQueue = null;
             sourceFiber.memoizedState = null;
           }
         }
@@ -26494,37 +26517,40 @@ if ("development" !== "production") {
       };
     }
     var didWarnAboutUpdateInRender = false;
-    var didWarnAboutUpdateInRenderForAnotherComponent;
-    {
-      didWarnAboutUpdateInRenderForAnotherComponent = new Set();
-    }
+    var didWarnAboutUpdateInGetChildContext = false;
 
     function warnAboutRenderPhaseUpdatesInDEV(fiber) {
       {
-        if (isRendering && (executionContext & RenderContext) !== NoContext) {
+        if ((executionContext & RenderContext) !== NoContext) {
           switch (fiber.tag) {
             case FunctionComponent:
             case ForwardRef:
             case SimpleMemoComponent:
               {
-                var renderingComponentName = workInProgress && getComponentName(workInProgress.type) || 'Unknown'; // Dedupe by the rendering component because it's the one that needs to be fixed.
-
-                var dedupeKey = renderingComponentName;
-
-                if (!didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey)) {
-                  didWarnAboutUpdateInRenderForAnotherComponent.add(dedupeKey);
-                  var setStateComponentName = getComponentName(fiber.type) || 'Unknown';
-                  error('Cannot update a component (`%s`) while rendering a ' + 'different component (`%s`). To locate the bad setState() call inside `%s`, ' + 'follow the stack trace as described in https://fb.me/setstate-in-render', setStateComponentName, renderingComponentName, renderingComponentName);
-                }
-
+                error('Cannot update a component from inside the function body of a ' + 'different component.');
                 break;
               }
 
             case ClassComponent:
               {
-                if (!didWarnAboutUpdateInRender) {
-                  error('Cannot update during an existing state transition (such as ' + 'within `render`). Render methods should be a pure ' + 'function of props and state.');
-                  didWarnAboutUpdateInRender = true;
+                switch (phase) {
+                  case 'getChildContext':
+                    if (didWarnAboutUpdateInGetChildContext) {
+                      return;
+                    }
+
+                    error('setState(...): Cannot call setState() inside getChildContext()');
+                    didWarnAboutUpdateInGetChildContext = true;
+                    break;
+
+                  case 'render':
+                    if (didWarnAboutUpdateInRender) {
+                      return;
+                    }
+
+                    error('Cannot update during an existing state transition (such as ' + 'within `render`). Render methods should be a pure ' + 'function of props and state.');
+                    didWarnAboutUpdateInRender = true;
+                    break;
                 }
 
                 break;
@@ -27595,7 +27621,7 @@ if ("development" !== "production") {
       }
 
       {
-        if (isRendering && current !== null && !didWarnAboutNestedUpdates) {
+        if (phase === 'render' && current !== null && !didWarnAboutNestedUpdates) {
           didWarnAboutNestedUpdates = true;
           error('Render methods should be a pure function of props and state; ' + 'triggering nested component updates from render is not allowed. ' + 'If necessary, trigger nested updates in componentDidUpdate.\n\n' + 'Check the render method of %s.', getComponentName(current.type) || 'Unknown');
         }
@@ -28166,7 +28192,7 @@ if ("development" !== "production") {
       };
     }
 
-    var ReactVersion = '16.13.1';
+    var ReactVersion = '16.13.0';
     setAttemptUserBlockingHydration(attemptUserBlockingHydration$1);
     setAttemptContinuousHydration(attemptContinuousHydration$1);
     setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority$1);
@@ -28350,7 +28376,7 @@ if (__DEV__) {
 
 module.exports = warning;
 },{}],"../../node_modules/react-is/cjs/react-is.development.js":[function(require,module,exports) {
-/** @license React v16.13.1
+/** @license React v16.13.0
  * react-is.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -33911,8 +33937,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var _default = (0, _createBrowserHistory.default)();
 
 exports.default = _default;
-},{"history/createBrowserHistory":"../../node_modules/history/createBrowserHistory.js"}],"assets/logo.png":[function(require,module,exports) {
-module.exports = "/logo.e9a9c890.png";
+},{"history/createBrowserHistory":"../../node_modules/history/createBrowserHistory.js"}],"assets/scotia-icon.png":[function(require,module,exports) {
+module.exports = "/scotia-icon.31ac7f4e.png";
 },{}],"components/Navbar.js":[function(require,module,exports) {
 "use strict";
 
@@ -33925,7 +33951,7 @@ var _react = _interopRequireWildcard(require("react"));
 
 var _reactRouterDom = require("react-router-dom");
 
-var _logo = _interopRequireDefault(require("../assets/logo.png"));
+var _scotiaIcon = _interopRequireDefault(require("../assets/scotia-icon.png"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -33941,13 +33967,9 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
@@ -33958,12 +33980,10 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 var Landing = /*#__PURE__*/function (_Component) {
   _inherits(Landing, _Component);
 
-  var _super = _createSuper(Landing);
-
   function Landing() {
     _classCallCheck(this, Landing);
 
-    return _super.apply(this, arguments);
+    return _possibleConstructorReturn(this, _getPrototypeOf(Landing).apply(this, arguments));
   }
 
   _createClass(Landing, [{
@@ -33976,61 +33996,120 @@ var Landing = /*#__PURE__*/function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      var loginRegLink = /*#__PURE__*/_react.default.createElement("ul", {
-        className: "navbar-nav"
-      }, /*#__PURE__*/_react.default.createElement("li", {
+      var loginRegLink = _react.default.createElement("ul", {
+        className: "navbar-nav",
+        id: "highlight"
+      }, _react.default.createElement("li", {
         className: "nav-item"
-      }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
+      }, _react.default.createElement(_reactRouterDom.Link, {
         to: "/login",
         className: "nav-link"
-      }, "Login")), /*#__PURE__*/_react.default.createElement("li", {
+      }, _react.default.createElement("a", {
+        className: "navbar-brand text-uppercase ml-5"
+      }, "Login\xA0", _react.default.createElement("i", {
+        class: "fas fa-sign-in-alt"
+      })))), _react.default.createElement("li", {
         className: "nav-item"
-      }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
+      }, _react.default.createElement(_reactRouterDom.Link, {
         to: "/register",
         className: "nav-link"
-      }, "Register")));
+      }, _react.default.createElement("a", {
+        className: "navbar-brand text-uppercase ml-5"
+      }, "Register\xA0", _react.default.createElement("i", {
+        class: "fas fa-user-plus"
+      })))));
 
-      var userLink = /*#__PURE__*/_react.default.createElement("ul", {
-        className: "navbar-nav"
-      }, /*#__PURE__*/_react.default.createElement("li", {
+      var userLink = _react.default.createElement("ul", {
+        className: "navbar-nav",
+        id: "highlight"
+      }, _react.default.createElement("li", {
         className: "nav-item"
-      }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
+      }, _react.default.createElement(_reactRouterDom.Link, {
         to: "/profile",
         className: "nav-link"
-      }, "User")), /*#__PURE__*/_react.default.createElement("li", {
+      }, _react.default.createElement("a", {
+        className: "navbar-brand text-uppercase ml-5"
+      }, "User"))), _react.default.createElement("li", {
         className: "nav-item"
-      }, /*#__PURE__*/_react.default.createElement("a", {
+      }, _react.default.createElement("a", {
         href: "",
         onClick: this.logOut.bind(this),
         className: "nav-link"
-      }, "Logout")));
+      }, _react.default.createElement("a", {
+        className: "navbar-brand text-uppercase ml-5"
+      }, "Logout\xA0", _react.default.createElement("i", {
+        class: "fas fa-sign-in-alt"
+      })))));
 
-      return /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement("img", {
-        className: "logo",
-        src: _logo.default
-      }), /*#__PURE__*/_react.default.createElement("nav", {
-        className: "navbar navbar-expand-lg navbar-dark bg-dark rounded"
-      }, /*#__PURE__*/_react.default.createElement("br", null), /*#__PURE__*/_react.default.createElement("button", {
+      return _react.default.createElement("nav", {
+        className: "navbar navbar-expand-lg navbar-light bg-dark"
+      }, _react.default.createElement("a", {
+        className: "navbar-brand ml-5",
+        href: "https://www.scotiabank.com/ca/en/personal.html"
+      }, _react.default.createElement("img", {
+        src: _scotiaIcon.default,
+        style: {
+          width: '35px'
+        }
+      })), _react.default.createElement("div", {
+        id: "highlight"
+      }, _react.default.createElement("a", {
+        className: "navbar-brand text-uppercase ml-5",
+        href: "/"
+      }, "Home\xA0", _react.default.createElement("i", {
+        class: "fas fa-home"
+      }))), _react.default.createElement("button", {
         className: "navbar-toggler",
         type: "button",
         "data-toggle": "collapse",
-        "data-target": "#navbarsExample10",
-        "aria-controls": "navbarsExample10",
+        "data-target": "#navbarSupportedContent",
+        "aria-controls": "navbarSupportedContent",
         "aria-expanded": "false",
         "aria-label": "Toggle navigation"
-      }, /*#__PURE__*/_react.default.createElement("span", {
+      }, _react.default.createElement("span", {
         className: "navbar-toggler-icon"
-      })), /*#__PURE__*/_react.default.createElement("div", {
-        className: "collapse navbar-collapse justify-content-md-center",
-        id: "navbarsExample10"
-      }, /*#__PURE__*/_react.default.createElement("ul", {
-        className: "navbar-nav"
-      }, /*#__PURE__*/_react.default.createElement("li", {
+      })), _react.default.createElement("div", {
+        className: "collapse navbar-collapse",
+        id: "navbarSupportedContent"
+      }, _react.default.createElement("ul", {
+        className: "navbar-nav m-auto",
+        id: "underline"
+      }, _react.default.createElement("li", {
+        className: "nav-item active"
+      }, _react.default.createElement("a", {
+        className: "nav-link text-white text-uppercase ml-5",
+        href: "/blocks"
+      }, "Blocks ", _react.default.createElement("span", {
+        className: "sr-only"
+      }, "(current)"))), _react.default.createElement("li", {
         className: "nav-item"
-      }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
-        to: "/",
-        className: "nav-link"
-      }, "Home"))), localStorage.usertoken ? userLink : loginRegLink)));
+      }, _react.default.createElement("a", {
+        className: "nav-link text-white text-uppercase ml-5",
+        href: "/write-cheque"
+      }, "Write a Cheque ", _react.default.createElement("span", {
+        className: "sr-only"
+      }, "(current)"))), _react.default.createElement("li", {
+        className: "nav-item"
+      }, _react.default.createElement("a", {
+        className: "nav-link text-white text-uppercase ml-5",
+        href: "/deposit-cheque"
+      }, "Deposit a Cheque ", _react.default.createElement("span", {
+        className: "sr-only"
+      }, "(current)"))), _react.default.createElement("li", {
+        className: "nav-item"
+      }, _react.default.createElement("a", {
+        className: "nav-link text-white text-uppercase ml-5",
+        href: "/transaction-pool"
+      }, "Transaction Pool ", _react.default.createElement("span", {
+        className: "sr-only"
+      }, "(current)"))), _react.default.createElement("li", {
+        className: "nav-item"
+      }, _react.default.createElement("a", {
+        className: "nav-link text-white text-uppercase ml-5",
+        href: "/show-bank-wallets"
+      }, "Bank Wallets ", _react.default.createElement("span", {
+        className: "sr-only"
+      }, "(current)")))), localStorage.usertoken ? userLink : loginRegLink));
     }
   }]);
 
@@ -34040,118 +34119,7 @@ var Landing = /*#__PURE__*/function (_Component) {
 var _default = (0, _reactRouterDom.withRouter)(Landing);
 
 exports.default = _default;
-},{"react":"../../node_modules/react/index.js","react-router-dom":"../../node_modules/react-router-dom/es/index.js","../assets/logo.png":"assets/logo.png"}],"components/App.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _react = _interopRequireWildcard(require("react"));
-
-var _reactRouterDom = require("react-router-dom");
-
-var _Navbar = _interopRequireDefault(require("./Navbar"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-var App = /*#__PURE__*/function (_Component) {
-  _inherits(App, _Component);
-
-  var _super = _createSuper(App);
-
-  function App() {
-    var _this;
-
-    _classCallCheck(this, App);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _super.call.apply(_super, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this), "state", {
-      walletInfo: {}
-    });
-
-    return _this;
-  }
-
-  _createClass(App, [{
-    key: "componentDidMount",
-    //IMPORTANT FOR DISPLAYING WALLET INFO. START HERE. Section 10 - 97
-    value: function componentDidMount() {
-      var _this2 = this;
-
-      fetch("".concat(document.location.origin, "/api/wallet-info")).then(function (response) {
-        return response.json();
-      }).then(function (json) {
-        return _this2.setState({
-          walletInfo: json
-        });
-      });
-    } //the NavBar below adds the navbar
-
-  }, {
-    key: "render",
-    value: function render() {
-      var _this$state$walletInf = this.state.walletInfo,
-          address = _this$state$walletInf.address,
-          balance = _this$state$walletInf.balance;
-      return /*#__PURE__*/_react.default.createElement("div", {
-        className: "App"
-      }, /*#__PURE__*/_react.default.createElement("br", null), /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("div", null, "Welcome to the blockchain..."), /*#__PURE__*/_react.default.createElement("br", null), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
-        to: "/blocks"
-      }, "Blocks")), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
-        to: "/write-cheque"
-      }, "Write a cheque")), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
-        to: "/deposit-cheque"
-      }, "Deposit a cheque")), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
-        to: "/transaction-pool"
-      }, "Transaction Pool")), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
-        to: "/show-bank-wallets"
-      }, "Show Bank Wallets")), /*#__PURE__*/_react.default.createElement("br", null), /*#__PURE__*/_react.default.createElement("div", {
-        className: "WalletInfo"
-      }, /*#__PURE__*/_react.default.createElement("div", null, "Address: ", address), /*#__PURE__*/_react.default.createElement("div", null, "Balance: ", balance)));
-    }
-  }]);
-
-  return App;
-}(_react.Component);
-
-var _default = App;
-exports.default = _default;
-},{"react":"../../node_modules/react/index.js","react-router-dom":"../../node_modules/react-router-dom/es/index.js","./Navbar":"components/Navbar.js"}],"../../node_modules/core-js/library/modules/_global.js":[function(require,module,exports) {
+},{"react":"../../node_modules/react/index.js","react-router-dom":"../../node_modules/react-router-dom/es/index.js","../assets/scotia-icon.png":"assets/scotia-icon.png"}],"../../node_modules/core-js/library/modules/_global.js":[function(require,module,exports) {
 
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 var global = module.exports = typeof window != 'undefined' && window.Math == Math
@@ -48097,31 +48065,32 @@ deprecationWarning.wrapper = function (Component) {
     args[_key - 1] = arguments[_key];
   }
 
-  return /*#__PURE__*/function (_Component) {
-    (0, _inheritsLoose2.default)(DeprecatedComponent, _Component);
+  return (/*#__PURE__*/function (_Component) {
+      (0, _inheritsLoose2.default)(DeprecatedComponent, _Component);
 
-    function DeprecatedComponent() {
-      return _Component.apply(this, arguments) || this;
-    }
-
-    var _proto = DeprecatedComponent.prototype;
-
-    _proto.componentWillMount = function componentWillMount() {
-      deprecationWarning.apply(void 0, args);
-
-      if (_Component.prototype.componentWillMount) {
-        var _Component$prototype$;
-
-        for (var _len2 = arguments.length, methodArgs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          methodArgs[_key2] = arguments[_key2];
-        }
-
-        (_Component$prototype$ = _Component.prototype.componentWillMount).call.apply(_Component$prototype$, [this].concat(methodArgs));
+      function DeprecatedComponent() {
+        return _Component.apply(this, arguments) || this;
       }
-    };
 
-    return DeprecatedComponent;
-  }(Component);
+      var _proto = DeprecatedComponent.prototype;
+
+      _proto.componentWillMount = function componentWillMount() {
+        deprecationWarning.apply(void 0, args);
+
+        if (_Component.prototype.componentWillMount) {
+          var _Component$prototype$;
+
+          for (var _len2 = arguments.length, methodArgs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+            methodArgs[_key2] = arguments[_key2];
+          }
+
+          (_Component$prototype$ = _Component.prototype.componentWillMount).call.apply(_Component$prototype$, [this].concat(methodArgs));
+        }
+      };
+
+      return DeprecatedComponent;
+    }(Component)
+  );
 };
 
 var _default = deprecationWarning;
@@ -52024,7 +51993,185 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-},{"./Accordion":"../../node_modules/react-bootstrap/es/Accordion.js","./Alert":"../../node_modules/react-bootstrap/es/Alert.js","./Badge":"../../node_modules/react-bootstrap/es/Badge.js","./Breadcrumb":"../../node_modules/react-bootstrap/es/Breadcrumb.js","./BreadcrumbItem":"../../node_modules/react-bootstrap/es/BreadcrumbItem.js","./Button":"../../node_modules/react-bootstrap/es/Button.js","./ButtonGroup":"../../node_modules/react-bootstrap/es/ButtonGroup.js","./ButtonToolbar":"../../node_modules/react-bootstrap/es/ButtonToolbar.js","./Carousel":"../../node_modules/react-bootstrap/es/Carousel.js","./CarouselItem":"../../node_modules/react-bootstrap/es/CarouselItem.js","./Checkbox":"../../node_modules/react-bootstrap/es/Checkbox.js","./Clearfix":"../../node_modules/react-bootstrap/es/Clearfix.js","./CloseButton":"../../node_modules/react-bootstrap/es/CloseButton.js","./ControlLabel":"../../node_modules/react-bootstrap/es/ControlLabel.js","./Col":"../../node_modules/react-bootstrap/es/Col.js","./Collapse":"../../node_modules/react-bootstrap/es/Collapse.js","./Dropdown":"../../node_modules/react-bootstrap/es/Dropdown.js","./DropdownButton":"../../node_modules/react-bootstrap/es/DropdownButton.js","./Fade":"../../node_modules/react-bootstrap/es/Fade.js","./Form":"../../node_modules/react-bootstrap/es/Form.js","./FormControl":"../../node_modules/react-bootstrap/es/FormControl.js","./FormGroup":"../../node_modules/react-bootstrap/es/FormGroup.js","./Glyphicon":"../../node_modules/react-bootstrap/es/Glyphicon.js","./Grid":"../../node_modules/react-bootstrap/es/Grid.js","./HelpBlock":"../../node_modules/react-bootstrap/es/HelpBlock.js","./Image":"../../node_modules/react-bootstrap/es/Image.js","./InputGroup":"../../node_modules/react-bootstrap/es/InputGroup.js","./Jumbotron":"../../node_modules/react-bootstrap/es/Jumbotron.js","./Label":"../../node_modules/react-bootstrap/es/Label.js","./ListGroup":"../../node_modules/react-bootstrap/es/ListGroup.js","./ListGroupItem":"../../node_modules/react-bootstrap/es/ListGroupItem.js","./Media":"../../node_modules/react-bootstrap/es/Media.js","./MenuItem":"../../node_modules/react-bootstrap/es/MenuItem.js","./Modal":"../../node_modules/react-bootstrap/es/Modal.js","./ModalBody":"../../node_modules/react-bootstrap/es/ModalBody.js","./ModalDialog":"../../node_modules/react-bootstrap/es/ModalDialog.js","./ModalFooter":"../../node_modules/react-bootstrap/es/ModalFooter.js","./ModalHeader":"../../node_modules/react-bootstrap/es/ModalHeader.js","./ModalTitle":"../../node_modules/react-bootstrap/es/ModalTitle.js","./Nav":"../../node_modules/react-bootstrap/es/Nav.js","./Navbar":"../../node_modules/react-bootstrap/es/Navbar.js","./NavbarBrand":"../../node_modules/react-bootstrap/es/NavbarBrand.js","./NavDropdown":"../../node_modules/react-bootstrap/es/NavDropdown.js","./NavItem":"../../node_modules/react-bootstrap/es/NavItem.js","./Overlay":"../../node_modules/react-bootstrap/es/Overlay.js","./OverlayTrigger":"../../node_modules/react-bootstrap/es/OverlayTrigger.js","./PageHeader":"../../node_modules/react-bootstrap/es/PageHeader.js","./PageItem":"../../node_modules/react-bootstrap/es/PageItem.js","./Pager":"../../node_modules/react-bootstrap/es/Pager.js","./Pagination":"../../node_modules/react-bootstrap/es/Pagination.js","./Panel":"../../node_modules/react-bootstrap/es/Panel.js","./PanelGroup":"../../node_modules/react-bootstrap/es/PanelGroup.js","./Popover":"../../node_modules/react-bootstrap/es/Popover.js","./ProgressBar":"../../node_modules/react-bootstrap/es/ProgressBar.js","./Radio":"../../node_modules/react-bootstrap/es/Radio.js","./ResponsiveEmbed":"../../node_modules/react-bootstrap/es/ResponsiveEmbed.js","./Row":"../../node_modules/react-bootstrap/es/Row.js","./SafeAnchor":"../../node_modules/react-bootstrap/es/SafeAnchor.js","./SplitButton":"../../node_modules/react-bootstrap/es/SplitButton.js","./Tab":"../../node_modules/react-bootstrap/es/Tab.js","./TabContainer":"../../node_modules/react-bootstrap/es/TabContainer.js","./TabContent":"../../node_modules/react-bootstrap/es/TabContent.js","./Table":"../../node_modules/react-bootstrap/es/Table.js","./TabPane":"../../node_modules/react-bootstrap/es/TabPane.js","./Tabs":"../../node_modules/react-bootstrap/es/Tabs.js","./Thumbnail":"../../node_modules/react-bootstrap/es/Thumbnail.js","./ToggleButton":"../../node_modules/react-bootstrap/es/ToggleButton.js","./ToggleButtonGroup":"../../node_modules/react-bootstrap/es/ToggleButtonGroup.js","./Tooltip":"../../node_modules/react-bootstrap/es/Tooltip.js","./Well":"../../node_modules/react-bootstrap/es/Well.js","./utils":"../../node_modules/react-bootstrap/es/utils/index.js"}],"components/Transaction.js":[function(require,module,exports) {
+},{"./Accordion":"../../node_modules/react-bootstrap/es/Accordion.js","./Alert":"../../node_modules/react-bootstrap/es/Alert.js","./Badge":"../../node_modules/react-bootstrap/es/Badge.js","./Breadcrumb":"../../node_modules/react-bootstrap/es/Breadcrumb.js","./BreadcrumbItem":"../../node_modules/react-bootstrap/es/BreadcrumbItem.js","./Button":"../../node_modules/react-bootstrap/es/Button.js","./ButtonGroup":"../../node_modules/react-bootstrap/es/ButtonGroup.js","./ButtonToolbar":"../../node_modules/react-bootstrap/es/ButtonToolbar.js","./Carousel":"../../node_modules/react-bootstrap/es/Carousel.js","./CarouselItem":"../../node_modules/react-bootstrap/es/CarouselItem.js","./Checkbox":"../../node_modules/react-bootstrap/es/Checkbox.js","./Clearfix":"../../node_modules/react-bootstrap/es/Clearfix.js","./CloseButton":"../../node_modules/react-bootstrap/es/CloseButton.js","./ControlLabel":"../../node_modules/react-bootstrap/es/ControlLabel.js","./Col":"../../node_modules/react-bootstrap/es/Col.js","./Collapse":"../../node_modules/react-bootstrap/es/Collapse.js","./Dropdown":"../../node_modules/react-bootstrap/es/Dropdown.js","./DropdownButton":"../../node_modules/react-bootstrap/es/DropdownButton.js","./Fade":"../../node_modules/react-bootstrap/es/Fade.js","./Form":"../../node_modules/react-bootstrap/es/Form.js","./FormControl":"../../node_modules/react-bootstrap/es/FormControl.js","./FormGroup":"../../node_modules/react-bootstrap/es/FormGroup.js","./Glyphicon":"../../node_modules/react-bootstrap/es/Glyphicon.js","./Grid":"../../node_modules/react-bootstrap/es/Grid.js","./HelpBlock":"../../node_modules/react-bootstrap/es/HelpBlock.js","./Image":"../../node_modules/react-bootstrap/es/Image.js","./InputGroup":"../../node_modules/react-bootstrap/es/InputGroup.js","./Jumbotron":"../../node_modules/react-bootstrap/es/Jumbotron.js","./Label":"../../node_modules/react-bootstrap/es/Label.js","./ListGroup":"../../node_modules/react-bootstrap/es/ListGroup.js","./ListGroupItem":"../../node_modules/react-bootstrap/es/ListGroupItem.js","./Media":"../../node_modules/react-bootstrap/es/Media.js","./MenuItem":"../../node_modules/react-bootstrap/es/MenuItem.js","./Modal":"../../node_modules/react-bootstrap/es/Modal.js","./ModalBody":"../../node_modules/react-bootstrap/es/ModalBody.js","./ModalDialog":"../../node_modules/react-bootstrap/es/ModalDialog.js","./ModalFooter":"../../node_modules/react-bootstrap/es/ModalFooter.js","./ModalHeader":"../../node_modules/react-bootstrap/es/ModalHeader.js","./ModalTitle":"../../node_modules/react-bootstrap/es/ModalTitle.js","./Nav":"../../node_modules/react-bootstrap/es/Nav.js","./Navbar":"../../node_modules/react-bootstrap/es/Navbar.js","./NavbarBrand":"../../node_modules/react-bootstrap/es/NavbarBrand.js","./NavDropdown":"../../node_modules/react-bootstrap/es/NavDropdown.js","./NavItem":"../../node_modules/react-bootstrap/es/NavItem.js","./Overlay":"../../node_modules/react-bootstrap/es/Overlay.js","./OverlayTrigger":"../../node_modules/react-bootstrap/es/OverlayTrigger.js","./PageHeader":"../../node_modules/react-bootstrap/es/PageHeader.js","./PageItem":"../../node_modules/react-bootstrap/es/PageItem.js","./Pager":"../../node_modules/react-bootstrap/es/Pager.js","./Pagination":"../../node_modules/react-bootstrap/es/Pagination.js","./Panel":"../../node_modules/react-bootstrap/es/Panel.js","./PanelGroup":"../../node_modules/react-bootstrap/es/PanelGroup.js","./Popover":"../../node_modules/react-bootstrap/es/Popover.js","./ProgressBar":"../../node_modules/react-bootstrap/es/ProgressBar.js","./Radio":"../../node_modules/react-bootstrap/es/Radio.js","./ResponsiveEmbed":"../../node_modules/react-bootstrap/es/ResponsiveEmbed.js","./Row":"../../node_modules/react-bootstrap/es/Row.js","./SafeAnchor":"../../node_modules/react-bootstrap/es/SafeAnchor.js","./SplitButton":"../../node_modules/react-bootstrap/es/SplitButton.js","./Tab":"../../node_modules/react-bootstrap/es/Tab.js","./TabContainer":"../../node_modules/react-bootstrap/es/TabContainer.js","./TabContent":"../../node_modules/react-bootstrap/es/TabContent.js","./Table":"../../node_modules/react-bootstrap/es/Table.js","./TabPane":"../../node_modules/react-bootstrap/es/TabPane.js","./Tabs":"../../node_modules/react-bootstrap/es/Tabs.js","./Thumbnail":"../../node_modules/react-bootstrap/es/Thumbnail.js","./ToggleButton":"../../node_modules/react-bootstrap/es/ToggleButton.js","./ToggleButtonGroup":"../../node_modules/react-bootstrap/es/ToggleButtonGroup.js","./Tooltip":"../../node_modules/react-bootstrap/es/Tooltip.js","./Well":"../../node_modules/react-bootstrap/es/Well.js","./utils":"../../node_modules/react-bootstrap/es/utils/index.js"}],"../../node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+var bundleURL = null;
+
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
+  }
+
+  return bundleURL;
+}
+
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
+
+    if (matches) {
+      return getBaseURL(matches[0]);
+    }
+  }
+
+  return '/';
+}
+
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
+}
+
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"../../node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
+var bundle = require('./bundle-url');
+
+function updateLink(link) {
+  var newLink = link.cloneNode();
+
+  newLink.onload = function () {
+    link.remove();
+  };
+
+  newLink.href = link.href.split('?')[0] + '?' + Date.now();
+  link.parentNode.insertBefore(newLink, link.nextSibling);
+}
+
+var cssTimeout = null;
+
+function reloadCSS() {
+  if (cssTimeout) {
+    return;
+  }
+
+  cssTimeout = setTimeout(function () {
+    var links = document.querySelectorAll('link[rel="stylesheet"]');
+
+    for (var i = 0; i < links.length; i++) {
+      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
+        updateLink(links[i]);
+      }
+    }
+
+    cssTimeout = null;
+  }, 50);
+}
+
+module.exports = reloadCSS;
+},{"./bundle-url":"../../node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"../../node_modules/bootstrap/dist/css/bootstrap.min.css":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"_css_loader":"../../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/App.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireWildcard(require("react"));
+
+var _reactRouterDom = require("react-router-dom");
+
+var _Navbar = _interopRequireDefault(require("./Navbar"));
+
+var _reactBootstrap = require("react-bootstrap");
+
+require("bootstrap/dist/css/bootstrap.min.css");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var App = /*#__PURE__*/function (_Component) {
+  _inherits(App, _Component);
+
+  function App() {
+    var _getPrototypeOf2;
+
+    var _this;
+
+    _classCallCheck(this, App);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(App)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this), "state", {
+      walletInfo: {}
+    });
+
+    return _this;
+  }
+
+  _createClass(App, [{
+    key: "componentDidMount",
+    //IMPORTANT FOR DISPLAYING WALLET INFO. START HERE. Section 10 - 97
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      fetch("".concat(document.location.origin, "/api/wallet-info")).then(function (response) {
+        return response.json();
+      }).then(function (json) {
+        return _this2.setState({
+          walletInfo: json
+        });
+      });
+    } //the NavBar below adds the navbar
+
+  }, {
+    key: "render",
+    value: function render() {
+      var _this$state$walletInf = this.state.walletInfo,
+          address = _this$state$walletInf.address,
+          balance = _this$state$walletInf.balance;
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
+        className: "App"
+      }, _react.default.createElement(_reactBootstrap.Jumbotron, {
+        fluid: true,
+        className: "jumbo"
+      }, _react.default.createElement("div", {
+        className: "overlay"
+      }))), _react.default.createElement("div", {
+        className: "WalletInfo"
+      }, _react.default.createElement("div", null, "Address: ", address), _react.default.createElement("div", null, "Balance: ", balance)));
+    }
+  }]);
+
+  return App;
+}(_react.Component);
+
+var _default = App;
+exports.default = _default;
+},{"react":"../../node_modules/react/index.js","react-router-dom":"../../node_modules/react-router-dom/es/index.js","./Navbar":"components/Navbar.js","react-bootstrap":"../../node_modules/react-bootstrap/es/index.js","bootstrap/dist/css/bootstrap.min.css":"../../node_modules/bootstrap/dist/css/bootstrap.min.css"}],"components/Transaction.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52049,20 +52196,20 @@ var Transaction = function Transaction(_ref) {
 
   var recipients = Object.keys(outputMap); //recipients array
 
-  return /*#__PURE__*/_react.default.createElement("div", {
+  return _react.default.createElement("div", {
     className: "Transaction"
-  }, /*#__PURE__*/_react.default.createElement("div", null, "From: ", "".concat(input.address.substring(0, 20), "..."), " | Balance: ", input.amount), recipients.map(function (recipient) {
+  }, _react.default.createElement("div", null, "From: ", "".concat(input.address.substring(0, 20), "..."), " | Balance: ", input.amount), recipients.map(function (recipient) {
     if (recipient === input.address) {
       //Checks if the address being display is the same as the sender, if so just display the new balance
-      return /*#__PURE__*/_react.default.createElement("div", {
+      return _react.default.createElement("div", {
         key: recipient
       }, "New Balance of Sender: ", outputMap[recipient]);
     } else {
-      return /*#__PURE__*/_react.default.createElement("div", {
+      return _react.default.createElement("div", {
         key: recipient
       }, "To: ", "".concat(recipient.substring(0, 20), "..."), "| Sent: ", outputMap[recipient]);
     }
-  }), /*#__PURE__*/_react.default.createElement("div", null, "Client Name: ", clientName), /*#__PURE__*/_react.default.createElement("div", null, "Cheque ID: ", chequeID), /*#__PURE__*/_react.default.createElement("div", null, "Cheque Date: ", date), /*#__PURE__*/_react.default.createElement("div", null, "Account Number: ", accountNumber), /*#__PURE__*/_react.default.createElement("div", null, "Transit Number: ", transitNumber), /*#__PURE__*/_react.default.createElement("div", null, "Institution Number: ", institutionNumber));
+  }), _react.default.createElement("div", null, "Client Name: ", clientName), _react.default.createElement("div", null, "Cheque ID: ", chequeID), _react.default.createElement("div", null, "Cheque Date: ", new Date(date).toLocaleString()), _react.default.createElement("div", null, "Account Number: ", accountNumber), _react.default.createElement("div", null, "Transit Number: ", transitNumber), _react.default.createElement("div", null, "Institution Number: ", institutionNumber));
 };
 
 var _default = Transaction;
@@ -52095,15 +52242,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -52114,9 +52257,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 var Block = /*#__PURE__*/function (_Component) {
   _inherits(Block, _Component);
 
-  var _super = _createSuper(Block);
-
   function Block() {
+    var _getPrototypeOf2;
+
     var _this;
 
     _classCallCheck(this, Block);
@@ -52125,7 +52268,7 @@ var Block = /*#__PURE__*/function (_Component) {
       args[_key] = arguments[_key];
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Block)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
     _defineProperty(_assertThisInitialized(_this), "state", {
       displayTransaction: false
@@ -52147,9 +52290,9 @@ var Block = /*#__PURE__*/function (_Component) {
           timestamp = _this$props$block.timestamp,
           hash = _this$props$block.hash;
       var hashDisplay = "".concat(hash.substring(0, 15), "...");
-      return /*#__PURE__*/_react.default.createElement("div", {
+      return _react.default.createElement("div", {
         className: "Block"
-      }, /*#__PURE__*/_react.default.createElement("div", null, "Hash: ", hashDisplay), /*#__PURE__*/_react.default.createElement("div", null, "Timestamp: ", new Date(timestamp).toLocaleString()), this.displayTransaction);
+      }, _react.default.createElement("div", null, "Hash: ", hashDisplay), _react.default.createElement("div", null, "Timestamp: ", new Date(timestamp).toLocaleString()), this.displayTransaction);
     }
   }, {
     key: "displayTransaction",
@@ -52159,20 +52302,20 @@ var Block = /*#__PURE__*/function (_Component) {
       var dataDisplay = stringifiedData.length > 35 ? "".concat(stringifiedData.substring(0, 35), "...") : stringifiedData;
 
       if (this.state.displayTransaction) {
-        return /*#__PURE__*/_react.default.createElement("div", null, data.map(function (transaction) {
-          return /*#__PURE__*/_react.default.createElement("div", {
+        return _react.default.createElement("div", null, data.map(function (transaction) {
+          return _react.default.createElement("div", {
             key: transaction.id
-          }, /*#__PURE__*/_react.default.createElement("hr", null), /*#__PURE__*/_react.default.createElement(_Transaction.default, {
+          }, _react.default.createElement("hr", null), _react.default.createElement(_Transaction.default, {
             transaction: transaction
           }));
-        }), /*#__PURE__*/_react.default.createElement("br", null), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
+        }), _react.default.createElement("br", null), _react.default.createElement(_reactBootstrap.Button, {
           bsStyle: "danger",
           bsSize: "small",
           onClick: this.toggleTransaction
         }, "Show Less"));
       }
 
-      return /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement("div", null, "Data: ", dataDisplay), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
+      return _react.default.createElement("div", null, _react.default.createElement("div", null, "Data: ", dataDisplay), _react.default.createElement(_reactBootstrap.Button, {
         bsStyle: "danger",
         bsSize: "small",
         onClick: this.toggleTransaction
@@ -52216,15 +52359,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -52235,9 +52374,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 var Blocks = /*#__PURE__*/function (_Component) {
   _inherits(Blocks, _Component);
 
-  var _super = _createSuper(Blocks);
-
   function Blocks() {
+    var _getPrototypeOf2;
+
     var _this;
 
     _classCallCheck(this, Blocks);
@@ -52246,7 +52385,7 @@ var Blocks = /*#__PURE__*/function (_Component) {
       args[_key] = arguments[_key];
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Blocks)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
     _defineProperty(_assertThisInitialized(_this), "state", {
       blocks: []
@@ -52272,14 +52411,16 @@ var Blocks = /*#__PURE__*/function (_Component) {
     key: "render",
     value: function render() {
       console.log('this.state', this.state);
-      return /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("h3", null, "Blocks"), this.state.blocks.map(function (block) {
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
+        className: "empty mt-2"
+      }, _react.default.createElement("h3", null, "Blocks"), this.state.blocks.map(function (block) {
         //for each block item
-        return /*#__PURE__*/_react.default.createElement(_Block.default, {
+        return _react.default.createElement(_Block.default, {
           key: block.hash,
           block: block
         }) //render according to instructions in the Block.js file
         ;
-      }));
+      })));
     }
   }]);
 
@@ -54085,15 +54226,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -54108,9 +54245,9 @@ var POLL_INTERVAL_MS = 10000;
 var TransactionPool = /*#__PURE__*/function (_Component) {
   _inherits(TransactionPool, _Component);
 
-  var _super = _createSuper(TransactionPool);
-
   function TransactionPool() {
+    var _getPrototypeOf2;
+
     var _this;
 
     _classCallCheck(this, TransactionPool);
@@ -54119,7 +54256,7 @@ var TransactionPool = /*#__PURE__*/function (_Component) {
       args[_key] = arguments[_key];
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(TransactionPool)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
     _defineProperty(_assertThisInitialized(_this), "state", {
       transactionPoolMap: {}
@@ -54159,6 +54296,18 @@ var TransactionPool = /*#__PURE__*/function (_Component) {
       });
     });
 
+    _defineProperty(_assertThisInitialized(_this), "clearInvalidTransactions", function () {
+      fetch("".concat(document.location.origin, "/api/clear-invalid-transactions")).then(function (response) {
+        if (response.status === 200) {
+          alert('Successfully cleared invalid pool transactions');
+
+          _history.default.push('/transaction-pool');
+        } else {
+          alert('There were no invalid transactions to clear');
+        }
+      });
+    });
+
     return _this;
   }
 
@@ -54180,20 +54329,23 @@ var TransactionPool = /*#__PURE__*/function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/_react.default.createElement("div", {
-        className: "TransactionPool"
-      }, /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("h3", null, "Transaction Pool"), Object.values(this.state.transactionPoolMap).map(function (transaction) {
-        return /*#__PURE__*/_react.default.createElement("div", {
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
+        className: "TransactionPool mt-2"
+      }, _react.default.createElement("h3", null, "Transaction Pool"), Object.values(this.state.transactionPoolMap).map(function (transaction) {
+        return _react.default.createElement("div", {
           key: transaction.id
-        }, /*#__PURE__*/_react.default.createElement("hr", null), /*#__PURE__*/_react.default.createElement(_Transaction.default, {
+        }, _react.default.createElement("hr", null), _react.default.createElement(_Transaction.default, {
           transaction: transaction
         }));
-      }), /*#__PURE__*/_react.default.createElement("hr", null), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Link, {
-        to: "/conduct-transaction"
-      }, "Conduct another transaction")), /*#__PURE__*/_react.default.createElement("br", null), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
+      }), _react.default.createElement("hr", null), _react.default.createElement("div", null, _react.default.createElement(_reactRouterDom.Link, {
+        to: "/deposit-cheque"
+      }, "Deposit Another Cheque")), _react.default.createElement("br", null), _react.default.createElement(_reactBootstrap.Button, {
         bsStyle: "danger",
         onClick: this.fetchMineTransactions
-      }, "Submit Cheques For Clearance"));
+      }, "Submit Cheques For Clearance"), _react.default.createElement("br", null), _react.default.createElement(_reactBootstrap.Button, {
+        bsStyle: "danger",
+        onClick: this.clearInvalidTransactions
+      }, "Clear Invalid Transactions")));
     }
   }]);
 
@@ -54234,15 +54386,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -54255,9 +54403,9 @@ var axios = require('axios');
 var DepositCheque = /*#__PURE__*/function (_Component) {
   _inherits(DepositCheque, _Component);
 
-  var _super = _createSuper(DepositCheque);
-
   function DepositCheque() {
+    var _getPrototypeOf2;
+
     var _this;
 
     _classCallCheck(this, DepositCheque);
@@ -54266,7 +54414,7 @@ var DepositCheque = /*#__PURE__*/function (_Component) {
       args[_key] = arguments[_key];
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(DepositCheque)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
     _defineProperty(_assertThisInitialized(_this), "state", {
       recipient: '',
@@ -54276,7 +54424,8 @@ var DepositCheque = /*#__PURE__*/function (_Component) {
       institutionNumber: '',
       accountNumber: '',
       clientName: '',
-      date: ''
+      date: '',
+      deposInstNum: -1
     });
 
     _defineProperty(_assertThisInitialized(_this), "updateRecipient", function (event) {
@@ -54337,99 +54486,128 @@ var DepositCheque = /*#__PURE__*/function (_Component) {
           institutionNumber = _this$state.institutionNumber,
           accountNumber = _this$state.accountNumber,
           clientName = _this$state.clientName,
-          date = _this$state.date;
-      var deposInstNum = "0";
-      axios.get('https://chequechain.wasplabs.ca/cheques', {
-        chequeId: chequeID,
-        tranNum: transitNumber,
-        finInstNum: institutionNumber,
-        accountId: accountNumber,
-        clientName: clientName
-      }).then(function (response) {
-        console.log(response); //response is an object with params: status, tokenizationString, balance, date, payee, payorsign
-        //do checks such as comparing balance and amount, status, DATE, etc.... later
-        //then put into blockchain
+          date = _this$state.date,
+          deposInstNum = _this$state.deposInstNum;
+      console.log("deposInst is " + deposInstNum);
 
-        fetch("".concat(document.location.origin, "/api/transact"), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            recipient: recipient,
-            amount: amount,
-            chequeID: chequeID,
-            transitNumber: transitNumber,
-            institutionNumber: institutionNumber,
-            accountNumber: accountNumber,
-            clientName: clientName,
-            date: date,
-            deposInstNum: deposInstNum
-          })
+      if (isNaN(chequeID) || isNaN(amount) || isNaN(transitNumber) || isNaN(institutionNumber) || isNaN(accountNumber)) {
+        alert("One more of your fields contains characters/special characters.");
+      } else if (!clientName.match(/^[a-zA-Z\s]+$/)) {
+        alert("Please make sure the client name only contains characters.");
+      } else if (chequeID === "" || recipient === "" || amount === "" || transitNumber === "" || institutionNumber === "" || accountNumber === "" || clientName === "") {
+        alert("Please check to see if your fields contain information.");
+      } else if (chequeID.length != 3 || transitNumber.length != 5 || institutionNumber.length != 3 || accountNumber.length != 7) {
+        if (chequeID.length != 3) alert("Please make sure the cheque ID has three numbers.");else if (transitNumber.length != 5) alert("Please make sure transit number has five numbers.");else if (institutionNumber.length != 3) alert("Please make sure the institution number has three numbers.");else alert("Please make sure the account number has seven numbers.");
+      } else if (institutionNumber.match(/(.)\1{2,}/) || accountNumber.match(/(.)\1{3,}/) || transitNumber.match(/(.)\1{3,}/)) {
+        if (accountNumber.match(/(.)\1{3,}/)) alert("Please make sure the account number does not contain repeating numbers.");else if (institutionNumber.match(/(.)\1{2,}/)) alert("Please make sure the institution number does not contain repeating numbers.");else alert("Please make sure the transit number does not contain repeating numbers.");
+      } else {
+        axios.get('https://chequechain.wasplabs.ca/cheques', {
+          chequeId: chequeID,
+          tranNum: transitNumber,
+          finInstNum: institutionNumber,
+          accountId: accountNumber,
+          clientName: clientName
         }).then(function (response) {
-          return response.json();
-        }).then(function (json) {
-          alert(json.message || json.type);
+          console.log(response); //response is an object with params: status, tokenizationString, balance, date, payee, payorsign
+          //do checks such as comparing balance and amount, status, DATE, etc.... later
+          //then put into blockchain
 
-          _history.default.push('/transaction-pool');
+          fetch("".concat(document.location.origin, "/api/transact"), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              recipient: recipient,
+              amount: amount,
+              chequeID: chequeID,
+              transitNumber: transitNumber,
+              institutionNumber: institutionNumber,
+              accountNumber: accountNumber,
+              clientName: clientName,
+              date: date,
+              deposInstNum: deposInstNum
+            })
+          }).then(function (response) {
+            return response.json();
+          }).then(function (json) {
+            alert(json.message || json.type);
+
+            _history.default.push('/transaction-pool');
+          });
+        }).catch(function (err) {
+          console.log(err);
         });
-      }).catch(function (err) {
-        console.log(err);
-      });
+      }
     });
 
     return _this;
   }
 
   _createClass(DepositCheque, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      fetch("".concat(document.location.origin, "/api/instNum")).then(function (response) {
+        return response.json();
+      }).then(function (json) {
+        console.log(json);
+
+        _this2.setState({
+          deposInstNum: json
+        });
+      });
+    }
+  }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/_react.default.createElement("div", {
-        className: "DepositCheque"
-      }, /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("h3", null, "Deposit A Cheque"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Recipient"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
+        className: "DepositCheque mt-2"
+      }, _react.default.createElement("h3", null, "Deposit A Cheque"), _react.default.createElement("br", null), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Recipient"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "text",
         placeholder: "Recipient",
         value: this.state.recipient,
         onChange: this.updateRecipient
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Cheque Amount"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Cheque Amount"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Amount",
         value: this.state.amount,
         onChange: this.updateAmount
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Name on Cheque"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Name on Cheque"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "text",
         placeholder: "Full Name",
         value: this.state.clientName,
         onChange: this.updateClientName
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Date on Cheque"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Date on Cheque"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "text",
         placeholder: "yyyy-mm-dd",
         value: this.state.date,
         onChange: this.updateDate
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Cheque Number"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Cheque Number"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Cheque Number",
         value: this.state.chequeID,
         onChange: this.updateChequeID
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Transit Number"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Transit Number"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Transit Number",
         value: this.state.transitNumber,
         onChange: this.updateTransitNumber
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Institution Number"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Institution Number"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Institution Number",
         value: this.state.institutionNumber,
         onChange: this.updateInstitutionNumber
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Account Number"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Account Number"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Account Number",
         value: this.state.accountNumber,
         onChange: this.updateAccountNumber
-      })), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
+      })), _react.default.createElement("div", null, _react.default.createElement(_reactBootstrap.Button, {
         bsStyle: "danger",
         onClick: this.DepositCheque
-      }, "Submit")));
+      }, "Submit"))));
     }
   }]);
 
@@ -54464,15 +54642,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -54483,9 +54657,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 var ShowBankWallets = /*#__PURE__*/function (_Component) {
   _inherits(ShowBankWallets, _Component);
 
-  var _super = _createSuper(ShowBankWallets);
-
   function ShowBankWallets() {
+    var _getPrototypeOf2;
+
     var _this;
 
     _classCallCheck(this, ShowBankWallets);
@@ -54494,7 +54668,7 @@ var ShowBankWallets = /*#__PURE__*/function (_Component) {
       args[_key] = arguments[_key];
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(ShowBankWallets)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
     _defineProperty(_assertThisInitialized(_this), "state", {
       wallets: []
@@ -54513,7 +54687,7 @@ var ShowBankWallets = /*#__PURE__*/function (_Component) {
         return response.json();
       }).then(function (json) {
         var wallets = Object.keys(json.output).map(function (inst) {
-          return /*#__PURE__*/_react.default.createElement("ul", {
+          return _react.default.createElement("ul", {
             key: inst
           }, "Bank wallet: ", inst, ", Balance: ", json.output[inst], " ");
         });
@@ -54526,7 +54700,9 @@ var ShowBankWallets = /*#__PURE__*/function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("h3", null, "Bank wallets"), this.state.wallets);
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
+        clasName: "empty mt-2"
+      }, _react.default.createElement("h3", null, "Bank Wallets"), this.state.wallets));
     }
   }]);
 
@@ -54535,79 +54711,12 @@ var ShowBankWallets = /*#__PURE__*/function (_Component) {
 
 var _default = ShowBankWallets;
 exports.default = _default;
-},{"react":"../../node_modules/react/index.js","./Navbar":"components/Navbar.js"}],"../../node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
-var bundleURL = null;
-
-function getBundleURLCached() {
-  if (!bundleURL) {
-    bundleURL = getBundleURL();
-  }
-
-  return bundleURL;
-}
-
-function getBundleURL() {
-  // Attempt to find the URL of the current script and use that as the base URL
-  try {
-    throw new Error();
-  } catch (err) {
-    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
-
-    if (matches) {
-      return getBaseURL(matches[0]);
-    }
-  }
-
-  return '/';
-}
-
-function getBaseURL(url) {
-  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
-}
-
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-},{}],"../../node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
-var bundle = require('./bundle-url');
-
-function updateLink(link) {
-  var newLink = link.cloneNode();
-
-  newLink.onload = function () {
-    link.remove();
-  };
-
-  newLink.href = link.href.split('?')[0] + '?' + Date.now();
-  link.parentNode.insertBefore(newLink, link.nextSibling);
-}
-
-var cssTimeout = null;
-
-function reloadCSS() {
-  if (cssTimeout) {
-    return;
-  }
-
-  cssTimeout = setTimeout(function () {
-    var links = document.querySelectorAll('link[rel="stylesheet"]');
-
-    for (var i = 0; i < links.length; i++) {
-      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
-        updateLink(links[i]);
-      }
-    }
-
-    cssTimeout = null;
-  }, 50);
-}
-
-module.exports = reloadCSS;
-},{"./bundle-url":"../../node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"index.css":[function(require,module,exports) {
+},{"react":"../../node_modules/react/index.js","./Navbar":"components/Navbar.js"}],"index.css":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
 module.hot.dispose(reloadCSS);
 module.hot.accept(reloadCSS);
-},{"_css_loader":"../../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/UserFunctions.js":[function(require,module,exports) {
+},{"./assets/banner.png":[["banner.9174b583.png","assets/banner.png"],"assets/banner.png"],"_css_loader":"../../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/UserFunctions.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -54691,15 +54800,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -54708,14 +54813,12 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 var Login = /*#__PURE__*/function (_Component) {
   _inherits(Login, _Component);
 
-  var _super = _createSuper(Login);
-
   function Login() {
     var _this;
 
     _classCallCheck(this, Login);
 
-    _this = _super.call(this);
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(Login).call(this));
     _this.state = {
       email: '',
       password: '',
@@ -54769,43 +54872,43 @@ var Login = /*#__PURE__*/function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/_react.default.createElement("div", {
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
         className: "container"
-      }, /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("div", {
+      }, _react.default.createElement("div", {
         className: "row"
-      }, /*#__PURE__*/_react.default.createElement("div", {
+      }, _react.default.createElement("div", {
         className: "col-md-6 mt-5 mx-auto"
-      }, /*#__PURE__*/_react.default.createElement("form", {
+      }, _react.default.createElement("form", {
         noValidate: true,
         onSubmit: this.onSubmit
-      }, /*#__PURE__*/_react.default.createElement("h1", {
+      }, _react.default.createElement("h1", {
         className: "h3 mb-3 font-weight-normal"
-      }, "Please sign in"), /*#__PURE__*/_react.default.createElement("div", {
+      }, "Please sign in"), _react.default.createElement("div", {
         className: "form-group"
-      }, /*#__PURE__*/_react.default.createElement("label", {
+      }, _react.default.createElement("label", {
         htmlFor: "email"
-      }, "Email address"), /*#__PURE__*/_react.default.createElement("input", {
+      }, "Email address"), _react.default.createElement("input", {
         type: "email",
         className: "form-control",
         name: "email",
         placeholder: "Enter email",
         value: this.state.email,
         onChange: this.onChange
-      })), /*#__PURE__*/_react.default.createElement("div", {
+      })), _react.default.createElement("div", {
         className: "form-group"
-      }, /*#__PURE__*/_react.default.createElement("label", {
+      }, _react.default.createElement("label", {
         htmlFor: "password"
-      }, "Password"), /*#__PURE__*/_react.default.createElement("input", {
+      }, "Password"), _react.default.createElement("input", {
         type: "password",
         className: "form-control",
         name: "password",
         placeholder: "Password",
         value: this.state.password,
         onChange: this.onChange
-      })), /*#__PURE__*/_react.default.createElement("button", {
+      })), _react.default.createElement("button", {
         type: "submit",
         className: "btn btn-lg btn-primary btn-block"
-      }, "Sign in")))));
+      }, "Sign in"))))));
     }
   }]);
 
@@ -54844,15 +54947,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -54861,14 +54960,12 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 var Register = /*#__PURE__*/function (_Component) {
   _inherits(Register, _Component);
 
-  var _super = _createSuper(Register);
-
   function Register() {
     var _this;
 
     _classCallCheck(this, Register);
 
-    _this = _super.call(this);
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(Register).call(this));
     _this.state = {
       first_name: '',
       last_name: '',
@@ -54910,6 +55007,7 @@ var Register = /*#__PURE__*/function (_Component) {
         })
       }).then(function (response) {
         console.log('Registered');
+        alert("Succesfully registered");
 
         _this2.props.history.push("/login");
       }).catch(function (err) {
@@ -54919,65 +55017,65 @@ var Register = /*#__PURE__*/function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/_react.default.createElement("div", {
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
         className: "container"
-      }, /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("div", {
+      }, _react.default.createElement("div", {
         className: "row"
-      }, /*#__PURE__*/_react.default.createElement("div", {
+      }, _react.default.createElement("div", {
         className: "col-md-6 mt-5 mx-auto"
-      }, /*#__PURE__*/_react.default.createElement("form", {
+      }, _react.default.createElement("form", {
         noValidate: true,
         onSubmit: this.onSubmit
-      }, /*#__PURE__*/_react.default.createElement("h1", {
+      }, _react.default.createElement("h1", {
         className: "h3 mb-3 font-weight-normal"
-      }, "Register"), /*#__PURE__*/_react.default.createElement("div", {
+      }, "Register"), _react.default.createElement("div", {
         className: "form-group"
-      }, /*#__PURE__*/_react.default.createElement("label", {
+      }, _react.default.createElement("label", {
         htmlFor: "name"
-      }, "First name"), /*#__PURE__*/_react.default.createElement("input", {
+      }, "First name"), _react.default.createElement("input", {
         type: "text",
         className: "form-control",
         name: "first_name",
         placeholder: "Enter your first name",
         value: this.state.first_name,
         onChange: this.onChange
-      })), /*#__PURE__*/_react.default.createElement("div", {
+      })), _react.default.createElement("div", {
         className: "form-group"
-      }, /*#__PURE__*/_react.default.createElement("label", {
+      }, _react.default.createElement("label", {
         htmlFor: "name"
-      }, "Last name"), /*#__PURE__*/_react.default.createElement("input", {
+      }, "Last name"), _react.default.createElement("input", {
         type: "text",
         className: "form-control",
         name: "last_name",
-        placeholder: "Enter your lastname name",
+        placeholder: "Enter your last name",
         value: this.state.last_name,
         onChange: this.onChange
-      })), /*#__PURE__*/_react.default.createElement("div", {
+      })), _react.default.createElement("div", {
         className: "form-group"
-      }, /*#__PURE__*/_react.default.createElement("label", {
+      }, _react.default.createElement("label", {
         htmlFor: "email"
-      }, "Email address"), /*#__PURE__*/_react.default.createElement("input", {
+      }, "Email address"), _react.default.createElement("input", {
         type: "email",
         className: "form-control",
         name: "email",
         placeholder: "Enter email",
         value: this.state.email,
         onChange: this.onChange
-      })), /*#__PURE__*/_react.default.createElement("div", {
+      })), _react.default.createElement("div", {
         className: "form-group"
-      }, /*#__PURE__*/_react.default.createElement("label", {
+      }, _react.default.createElement("label", {
         htmlFor: "password"
-      }, "Password"), /*#__PURE__*/_react.default.createElement("input", {
+      }, "Password"), _react.default.createElement("input", {
         type: "password",
         className: "form-control",
         name: "password",
         placeholder: "Password",
         value: this.state.password,
         onChange: this.onChange
-      })), /*#__PURE__*/_react.default.createElement("button", {
+      })), _react.default.createElement("button", {
         type: "submit",
         className: "btn btn-lg btn-primary btn-block"
-      }, "Register!")))));
+      }, "Register"))))));
     }
   }]);
 
@@ -55117,13 +55215,9 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
@@ -55134,14 +55228,12 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 var Profile = /*#__PURE__*/function (_Component) {
   _inherits(Profile, _Component);
 
-  var _super = _createSuper(Profile);
-
   function Profile() {
     var _this;
 
     _classCallCheck(this, Profile);
 
-    _this = _super.call(this);
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(Profile).call(this));
     _this.state = {
       first_name: '',
       last_name: '',
@@ -55165,17 +55257,17 @@ var Profile = /*#__PURE__*/function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/_react.default.createElement("div", {
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
         className: "container"
-      }, /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("div", {
+      }, _react.default.createElement("div", {
         className: "jumbotron mt-5"
-      }, /*#__PURE__*/_react.default.createElement("div", {
+      }, _react.default.createElement("div", {
         className: "col-sm-8 mx-auto"
-      }, /*#__PURE__*/_react.default.createElement("h1", {
+      }, _react.default.createElement("h1", {
         className: "text-center"
-      }, "PROFILE")), /*#__PURE__*/_react.default.createElement("table", {
+      }, "PROFILE")), _react.default.createElement("table", {
         className: "table col-md-6 mx-auto"
-      }, /*#__PURE__*/_react.default.createElement("tbody", null, /*#__PURE__*/_react.default.createElement("tr", null, /*#__PURE__*/_react.default.createElement("td", null, "Fist Name"), /*#__PURE__*/_react.default.createElement("td", null, this.state.first_name)), /*#__PURE__*/_react.default.createElement("tr", null, /*#__PURE__*/_react.default.createElement("td", null, "Last Name"), /*#__PURE__*/_react.default.createElement("td", null, this.state.last_name)), /*#__PURE__*/_react.default.createElement("tr", null, /*#__PURE__*/_react.default.createElement("td", null, "Email"), /*#__PURE__*/_react.default.createElement("td", null, this.state.email))))));
+      }, _react.default.createElement("tbody", null, _react.default.createElement("tr", null, _react.default.createElement("td", null, "First Name"), _react.default.createElement("td", null, this.state.first_name)), _react.default.createElement("tr", null, _react.default.createElement("td", null, "Last Name"), _react.default.createElement("td", null, this.state.last_name)), _react.default.createElement("tr", null, _react.default.createElement("td", null, "Email"), _react.default.createElement("td", null, this.state.email)))))));
     }
   }]);
 
@@ -55320,15 +55412,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -55341,9 +55429,9 @@ var axios = require('axios');
 var WriteCheque = /*#__PURE__*/function (_Component) {
   _inherits(WriteCheque, _Component);
 
-  var _super = _createSuper(WriteCheque);
-
   function WriteCheque() {
+    var _getPrototypeOf2;
+
     var _this;
 
     _classCallCheck(this, WriteCheque);
@@ -55352,7 +55440,7 @@ var WriteCheque = /*#__PURE__*/function (_Component) {
       args[_key] = arguments[_key];
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(WriteCheque)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
     _defineProperty(_assertThisInitialized(_this), "state", {
       recipient: '',
@@ -55424,24 +55512,46 @@ var WriteCheque = /*#__PURE__*/function (_Component) {
           accountNumber = _this$state.accountNumber,
           clientName = _this$state.clientName,
           date = _this$state.date;
-      axios.post('https://chequechain.wasplabs.ca/cheques', {
-        balance: 1000,
-        date: date,
-        payee: recipient,
-        payorSign: clientName,
-        chequeId: chequeID,
-        finInstNum: institutionNumber,
-        tranNum: transitNumber,
-        accountId: accountNumber,
-        amount: amount
-      }).then(function (response) {
-        console.log(response);
-        alert("Successfully created a cheque.");
-
-        _history.default.push('/');
-      }).catch(function (err) {
-        console.log(err);
+      var balance = 1000;
+      fetch("".concat(document.location.origin, "/api/wallet-info")).then(function (response) {
+        return response.json();
+      }).then(function (json) {
+        balance = json.balance;
+        console.log(balance);
       });
+
+      if (isNaN(chequeID) || isNaN(amount) || isNaN(transitNumber) || isNaN(institutionNumber) || isNaN(accountNumber)) {
+        alert("One more of your fields contains characters/special characters.");
+      } else if (!clientName.match(/^[a-zA-Z\s]+$/)) {
+        alert("Please make sure the client name only contains characters.");
+      } else if (chequeID === "" || recipient === "" || amount === "" || transitNumber === "" || institutionNumber === "" || accountNumber === "" || clientName === "") {
+        alert("Please check to see if your fields contain information.");
+      } else if (chequeID.length != 3 || transitNumber.length != 5 || institutionNumber.length != 3 || accountNumber.length != 7) {
+        if (chequeID.length != 3) alert("Please make sure the cheque ID has three numbers.");else if (transitNumber.length != 5) alert("Please make sure transit number has five numbers.");else if (institutionNumber.length != 3) alert("Please make sure the institution number has three numbers.");else alert("Please make sure the account number has seven numbers.");
+      } else if (institutionNumber.match(/(.)\1{2,}/) || accountNumber.match(/(.)\1{3,}/) || transitNumber.match(/(.)\1{3,}/)) {
+        if (accountNumber.match(/(.)\1{3,}/)) alert("Please make sure the account number does not contain repeating numbers.");else if (institutionNumber.match(/(.)\1{2,}/)) alert("Please make sure the institution number does not contain repeating numbers.");else alert("Please make sure the transit number does not contain repeating numbers.");
+      } //end of if block
+      else {
+          axios.post('https://chequechain.wasplabs.ca/cheques', {
+            balance: balance,
+            date: date,
+            payee: recipient,
+            payorSign: clientName,
+            chequeId: chequeID,
+            finInstNum: institutionNumber,
+            tranNum: transitNumber,
+            accountId: accountNumber,
+            amount: amount
+          }).then(function (response) {
+            console.log(response);
+            alert("Successfully created a cheque.");
+
+            _history.default.push('/');
+          }).catch(function (err) {
+            console.log(err);
+          });
+        } //end of else block
+
     });
 
     return _this;
@@ -55450,52 +55560,52 @@ var WriteCheque = /*#__PURE__*/function (_Component) {
   _createClass(WriteCheque, [{
     key: "render",
     value: function render() {
-      return /*#__PURE__*/_react.default.createElement("div", {
-        className: "ConductTransaction"
-      }, /*#__PURE__*/_react.default.createElement(_Navbar.default, null), /*#__PURE__*/_react.default.createElement("h3", null, "Conduct a Transaction"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Recipient"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
+        className: "ConductTransaction mt-2"
+      }, _react.default.createElement("h3", null, "Write a Cheque"), _react.default.createElement("br", null), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Recipient"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "text",
         placeholder: "Recipient",
         value: this.state.recipient,
         onChange: this.updateRecipient
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Cheque Amount"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Cheque Amount"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Amount",
         value: this.state.amount,
         onChange: this.updateAmount
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Name on Cheque"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Name on Cheque"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "text",
         placeholder: "Full Name",
         value: this.state.clientName,
         onChange: this.updateClientName
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Date on Cheque"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Date on Cheque"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "text",
         placeholder: "yyyy-mm-dd",
         value: this.state.date,
         onChange: this.updateDate
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Cheque Number"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Cheque Number"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Cheque Number",
         value: this.state.chequeID,
         onChange: this.updateChequeID
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Transit Number"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Transit Number"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Transit Number",
         value: this.state.transitNumber,
         onChange: this.updateTransitNumber
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Institution Number"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Institution Number"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Institution Number",
         value: this.state.institutionNumber,
         onChange: this.updateInstitutionNumber
-      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormGroup, null, /*#__PURE__*/_react.default.createElement("h4", null, "Account Number"), /*#__PURE__*/_react.default.createElement(_reactBootstrap.FormControl, {
+      })), _react.default.createElement(_reactBootstrap.FormGroup, null, _react.default.createElement("h4", null, "Account Number"), _react.default.createElement(_reactBootstrap.FormControl, {
         input: "number",
         placeholder: "Account Number",
         value: this.state.accountNumber,
         onChange: this.updateAccountNumber
-      })), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
+      })), _react.default.createElement("div", null, _react.default.createElement(_reactBootstrap.Button, {
         bsStyle: "danger",
         onClick: this.conductTransaction
-      }, "Submit")));
+      }, "Submit"))));
     }
   }]);
 
@@ -55539,34 +55649,34 @@ var _WriteCheque = _interopRequireDefault(require("./components/WriteCheque"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-(0, _reactDom.render)( /*#__PURE__*/_react.default.createElement(_reactRouterDom.Router, {
+(0, _reactDom.render)(_react.default.createElement(_reactRouterDom.Router, {
   history: _history.default
-}, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Switch, null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}, _react.default.createElement(_reactRouterDom.Switch, null, _react.default.createElement(_reactRouterDom.Route, {
   exact: true,
   path: "/",
   component: _App.default
-}), /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}), _react.default.createElement(_reactRouterDom.Route, {
   path: "/blocks/",
   component: _Blocks.default
-}), /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}), _react.default.createElement(_reactRouterDom.Route, {
   path: "/write-cheque/",
   component: _WriteCheque.default
-}), /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}), _react.default.createElement(_reactRouterDom.Route, {
   path: "/deposit-cheque/",
   component: _DepositCheque.default
-}), /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}), _react.default.createElement(_reactRouterDom.Route, {
   path: "/transaction-pool",
   component: _TransactionPool.default
-}), /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}), _react.default.createElement(_reactRouterDom.Route, {
   path: "/show-bank-wallets",
   component: _ShowBankWallets.default
-}), "//for login stuff", /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}), "//for login stuff", _react.default.createElement(_reactRouterDom.Route, {
   path: "/register",
   component: _Register.default
-}), /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}), _react.default.createElement(_reactRouterDom.Route, {
   path: "/login",
   component: _Login.default
-}), /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+}), _react.default.createElement(_reactRouterDom.Route, {
   path: "/profile",
   component: _Profile.default
 }))), document.getElementById('root'));
@@ -55599,7 +55709,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "3081" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55761" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

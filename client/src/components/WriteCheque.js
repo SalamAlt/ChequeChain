@@ -53,11 +53,8 @@ class WriteCheque extends Component {
 
 		if(isNaN(chequeID) || isNaN(amount) || isNaN(transitNumber) || isNaN(institutionNumber) || isNaN(accountNumber)){
 			alert("One more of your fields contains characters/special characters.");
-		} else if(!clientName.match(/^[a-zA-Z\s]+$/) || !recipient.match(/^[a-zA-Z\s]+$/)) {
-			if(!clientName.match(/^[a-zA-Z\s]+$/))
-				alert("Please make sure the client name only contains characters.");
-			else 
-				alert("Please make sure the recipient only contains characters.");
+		} else if(!clientName.match(/^[a-zA-Z\s]+$/)) {
+			alert("Please make sure the client name only contains characters.");
 		} else if(chequeID === "" || recipient === "" || amount === "" || transitNumber === "" || institutionNumber === "" || accountNumber === "" || clientName === ""){
 			alert("Please check to see if your fields contain information.");
 		} else if(chequeID.length != 3 || transitNumber.length != 5 || institutionNumber.length != 3 || accountNumber.length != 7){

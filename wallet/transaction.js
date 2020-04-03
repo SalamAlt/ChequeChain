@@ -82,6 +82,10 @@ class Transaction {
         const outputTotal = Object.values(outputMap)
             .reduce((total, outputAmount) => total + outputAmount);
 
+        if (outputMap[address] < 0){
+            return false;
+        }
+
         /*if (amount !== outputTotal) {
             console.log("Amount: " +amount+ ", outputTotal: "+outputTotal+", finalAmount: "+finalAmount);
             console.error(`Invalid transaction from ${address}`);            

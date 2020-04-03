@@ -124,6 +124,12 @@ app.get('/api/wallet-info', (req, res) => {
     });
 });
 
+app.get('/api/clear-invalid-transactions', (req, res) => {
+    transactionPool.clearInvalid();
+
+    res.send('200');
+});
+
 
 
 //retrieve bank wallets (institution numbers as priv keys)

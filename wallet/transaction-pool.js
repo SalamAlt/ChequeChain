@@ -12,11 +12,19 @@ class TransactionPool {
 
     clear() {//When the pool is cleared, this is what is called
         for (let transaction of Object.values(this.transactionMap)){
-            if (transaction.date<Date.now()){
+            if (Transaction.validTransaction(transaction)){
                 delete this.transactionMap[transaction.id];
             }
         } 
     }
+
+    clearInvalid() {
+        for (let transaction of Object.values(this.transactionMap)){
+            if (!Transaction.validTransaction(transaction)){
+                delete this.transactionMap[transaction.id];
+            }
+        }
+    } 
 
     setMap(transactionMap) {
         this.transactionMap = transactionMap;
