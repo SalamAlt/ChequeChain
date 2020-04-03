@@ -80,6 +80,11 @@ class Landing extends Component {
                 <a className="nav-link text-white text-uppercase ml-5" href="/show-bank-wallets">Bank Wallets <span className="sr-only">(current)</span></a>
               </li>
 
+			  
+              <li className="nav-item">
+                <a className="nav-link text-white text-uppercase ml-5" href="/show-cheques">Show Cheques <span className="sr-only">(current)</span></a>
+              </li>
+
             </ul>
 			{localStorage.usertoken ? userLink : loginRegLink}
           </div>
