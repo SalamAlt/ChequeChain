@@ -1,0 +1,94 @@
+.App-header {
+    background-color: #222;
+    height: 150px;
+    padding: 20px;
+    color: white;
+  }
+
+body {
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    font-size: 20px;
+    font-family: 'Quicksand';
+    word-wrap: break-word;
+}
+
+.logo {
+    width: 700px;
+    height: 180px;
+}
+
+#highlight a {
+    color: white;
+}
+
+.navbar-brand a {
+    color: white;
+}
+
+#underline a:hover {
+  border-bottom: 3px solid red;
+}
+
+#underline a.active {
+  border-bottom: 3px solid red;
+}
+
+#highlight a:hover {
+    color: #ff0015;
+}
+
+#highlight a:active {
+    color: #ff0015;
+}
+
+
+.App {
+    display: flex;
+    flex-direction: column;
+}
+
+h4 {
+	text-align: left;
+}
+
+a, a:hover {
+    color: #e66;
+    text-decoration: none;
+}
+
+.ConductTransaction, .TransactionPool, .DepositCheque {
+    margin: 10%;
+}
+
+.Block {
+    border: 1px solid #fff;
+    padding: 5%;
+    margin: 2%;
+}
+
+.Transaction {
+    padding: 5;
+}
+
+
+.jumbo {
+    background: url('./assets/logo-inverse.png') no-repeat center center;
+    background-size: 50% 65%;
+    height: 250px;
+    position: relative;
+    background-color: red;
+    z-index: 2;
+}
+/*
+.overlay {
+    background-color: #000;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: -1;
+}*/
