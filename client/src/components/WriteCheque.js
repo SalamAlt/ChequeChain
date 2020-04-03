@@ -90,6 +90,9 @@ class WriteCheque extends Component {
 				alert("Successfully created a cheque.")
 				history.push('/');
 			}).catch(err => {
+				//console.log(response.json().message);
+				//console.log(err.message);
+				alert("The key already exists in the server. If you have supplied a CAS then the key exists with a CAS value different than specified");
 				console.log(err);
 			});
 		} //end of else block
