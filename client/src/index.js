@@ -7,6 +7,7 @@ import Blocks from './components/Blocks';
 import TransactionPool from './components/TransactionPool';
 import DepositCheque from './components/DepositCheque';
 import ShowBankWallets from './components/ShowBankWallets';
+import ShowCheques from './components/ShowCheques';
 
 import './index.css';
 
@@ -25,6 +26,8 @@ render(
             <Route path='/deposit-cheque/' component={DepositCheque} />
             <Route path='/transaction-pool' component={TransactionPool} />
             <Route path='/show-bank-wallets' component={ShowBankWallets} />
+            //show user's bank cheques written
+            <Route path='/show-cheques' component={ShowCheques} />
             //for login stuff
              <Route  path="/register" component={Register} />
              <Route  path="/login" component={Login} />
