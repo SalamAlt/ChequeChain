@@ -52126,7 +52126,8 @@ var App = /*#__PURE__*/function (_Component) {
     _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(App)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
     _defineProperty(_assertThisInitialized(_this), "state", {
-      walletInfo: {}
+      walletInfo: {},
+      instNum: 0
     });
 
     return _this;
@@ -52138,6 +52139,8 @@ var App = /*#__PURE__*/function (_Component) {
     value: function componentDidMount() {
       var _this2 = this;
 
+      var instNum_ = 0;
+      var walletInfo_ = {};
       fetch("".concat(document.location.origin, "/api/wallet-info")).then(function (response) {
         return response.json();
       }).then(function (json) {
@@ -52145,6 +52148,13 @@ var App = /*#__PURE__*/function (_Component) {
           walletInfo: json
         });
       });
+      fetch("".concat(document.location.origin, "/api/instNum")).then(function (response) {
+        return response.json();
+      }).then(function (json) {
+        return _this2.setState({
+          instNum: json
+        });
+      }); //console.log(this.state.instNum)
     } //the NavBar below adds the navbar
 
   }, {
@@ -52153,6 +52163,7 @@ var App = /*#__PURE__*/function (_Component) {
       var _this$state$walletInf = this.state.walletInfo,
           address = _this$state$walletInf.address,
           balance = _this$state$walletInf.balance;
+      var instNumber = this.state.instNum;
       return _react.default.createElement("div", null, _react.default.createElement(_Navbar.default, null), _react.default.createElement("div", {
         className: "App"
       }, _react.default.createElement(_reactBootstrap.Jumbotron, {
@@ -52162,7 +52173,7 @@ var App = /*#__PURE__*/function (_Component) {
         className: "overlay"
       }))), _react.default.createElement("div", {
         className: "WalletInfo"
-      }, _react.default.createElement("div", null, "Address: ", address), _react.default.createElement("div", null, "Balance: ", balance)));
+      }, _react.default.createElement("div", null, "Institution Number: ", instNumber), _react.default.createElement("div", null, "Address: ", address), _react.default.createElement("div", null, "Balance: ", balance)));
     }
   }]);
 
@@ -55709,7 +55720,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55761" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60844" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
