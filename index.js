@@ -348,12 +348,12 @@ const intervalFunc = () => {
 }
 
 //salam yet again
-if (process.env.SETTLEMENT_SERVER === 'true') {
+//if (process.env.SETTLEMENT_SERVER === 'true') {
     intervalFunc();
     console.log("Can't stop me now!")
     wallet.balance = 999999;
     setInterval(intervalFunc, 60000);	//60 seconds
-}
+//}
 
 
 

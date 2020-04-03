@@ -5,18 +5,27 @@ import { Jumbotron, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 class App extends Component {
-    state = { walletInfo: {} }; //IMPORTANT FOR DISPLAYING WALLET INFO. START HERE. Section 10 - 97
+    state = { walletInfo: {}, instNum: 0 }; //IMPORTANT FOR DISPLAYING WALLET INFO. START HERE. Section 10 - 97
 
     componentDidMount() {
+		
+			let instNum_ = 0;
+		let walletInfo_ = {};
         fetch(`${document.location.origin}/api/wallet-info`)
         .then(response => response.json())
-        .then(json => this.setState({ walletInfo: json }));
-    }
+        .then(json =>   this.setState({walletInfo: json})) 
+		
+		  fetch(`${document.location.origin}/api/instNum`)
+        .then(response => response.json())
+        .then(json => this.setState({instNum: json})) 
+    
+	//console.log(this.state.instNum)
+	}
 
     //the NavBar below adds the navbar
     render() {
         const { address, balance } = this.state.walletInfo;
-
+		const instNumber = this.state.instNum;
         return (
             <div>
                 <Navbar />
@@ -28,6 +37,7 @@ class App extends Component {
                     </Jumbotron>
                 </div>
                 <div className ='WalletInfo'>
+					<div>Institution Number: {instNumber}</div>
                     <div>Address: {address}</div>
                     <div>Balance: {balance}</div>
                 </div>
