@@ -94,10 +94,6 @@ class TransactionPool extends Component {
                         Submit Cheques For Clearance
                 </Button>
                 <br/>
-<<<<<<< HEAD
-=======
-                <br />
->>>>>>> 6331575a77abaed80892c6cb8a30e6a89ef9cb32
                 <Button 
                     bsStyle="danger"
                     onClick={this.clearInvalidTransactions}
@@ -110,8 +106,4 @@ class TransactionPool extends Component {
     }
 }
 
-<<<<<<< HEAD
 export default TransactionPool;
-=======
-export default TransactionPool;
->>>>>>> 6331575a77abaed80892c6cb8a30e6a89ef9cb32
