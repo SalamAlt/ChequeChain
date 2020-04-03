@@ -275,6 +275,7 @@ app.listen(PORT, () => {
 //                    have a field: deposInstNum to signify the bank that's depositing; and also gotta change our buttons like I said on discord
 //              make this settlement wallet hella rich like 99999999
 const intervalFunc = () => {
+    
     const banks_set = new Set();
     axios.get('https://chequechain.wasplabs.ca/banks?bodyLimit=100&pageLimit=1')
         .then(response => {
