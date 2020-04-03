@@ -290,6 +290,7 @@ const intervalFunc = () => {
             //wallet public key will be finstNum
 
             //iterate over blockchain and count each finstNum
+<<<<<<< HEAD
             let bankHist = {};
             for (let i = blockchain.chain.length - 1; i > 0; i--) {
                 const block = blockchain.chain[i];
@@ -300,6 +301,11 @@ const intervalFunc = () => {
                             break;
                         }
                     }
+=======
+            for (let i = blockchain.chain.length - 1; i > 0; i--) {
+                const block = blockchain.chain[i];
+                for (let transaction of block.data) {
+>>>>>>> 6331575a77abaed80892c6cb8a30e6a89ef9cb32
                     //ignore any transactions with the banks wallet key since we're making that now
                     //this is slower in execution time but it's faster for development
                     if (transaction.chequeID != -1 && banks_keyList.has(transaction.institutionNumber)) {

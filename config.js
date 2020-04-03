@@ -14,7 +14,11 @@ const GENESIS_DATA = {
     payee: 'payee-name',
     payeeSign: 'payor-sign',
     */////////////////
+<<<<<<< HEAD
     timestamp: Date.now(),
+=======
+    timestamp: 1,
+>>>>>>> 6331575a77abaed80892c6cb8a30e6a89ef9cb32
     lastHash: '-----',
     hash: 'hash-one',
     difficulty: INITIAL_DIFFICULTY, 
@@ -22,7 +26,11 @@ const GENESIS_DATA = {
     data: []
 };
 
+<<<<<<< HEAD
 const STARTING_BALANCE = 10000;
+=======
+const STARTING_BALANCE = 1000;
+>>>>>>> 6331575a77abaed80892c6cb8a30e6a89ef9cb32
 
 const REWARD_INPUT = { address: '*authorized-reward*' };
 
