@@ -290,9 +290,16 @@ const intervalFunc = () => {
             //wallet public key will be finstNum
 
             //iterate over blockchain and count each finstNum
+            let bankHist = {};
             for (let i = blockchain.chain.length - 1; i > 0; i--) {
                 const block = blockchain.chain[i];
                 for (let transaction of block.data) {
+                    if (i = blockchain.chain.length - 1){
+                        if (transaction.clientName === "Settlement Node"){
+                            i=0;
+                            break;
+                        }
+                    }
                     //ignore any transactions with the banks wallet key since we're making that now
                     //this is slower in execution time but it's faster for development
                     if (transaction.chequeID != -1 && banks_keyList.has(transaction.institutionNumber)) {
@@ -302,10 +309,12 @@ const intervalFunc = () => {
    
                         var idx = banks_array.findIndex(bank => bank.key == transaction.institutionNumber);
                         banks_array[idx].balance -= amount
+                        bankHist[idx]=transaction.institutionNumber;
 
                         //bank who deposited cheque gets the money
                         idx = banks_array.findIndex(bank => bank.key == transaction.deposInstNum);
                         banks_array[idx].balance += amount
+                        bankHist[idx]=transaction.deposInstNum;
                     }
                 }
             } //end of blockchain loop
@@ -314,7 +323,7 @@ const intervalFunc = () => {
             //now make "transactions" which should technically be from one bank to another in terms of who paid who but no time
             //  so i'll make it from THIS settlement node to each bank
             var transaction;
-            for (let i = 0; i < banks_array.length; i++) {
+            for (let i of Object.keys(bankHist)) {
                 /*
                         senderWallet: this, recipient, amount, chequeID, 
                         transitNumber, institutionNumber, accountNumber, 
@@ -322,10 +331,10 @@ const intervalFunc = () => {
                 */
 
                 const outputMap = {};
-                outputMap[banks_array[i].key] = banks_array[i].balance;
+                outputMap[bankHist[i]] = banks_array[i].balance;
                 outputMap[wallet.publicKey] = wallet.balance;
                 transaction = new Transaction({
-                    senderWallet: wallet, recipient: banks_array[i].key, amount: banks_array[i].balance,
+                    senderWallet: wallet, recipient: bankHist[i], amount: banks_array[i].balance,
                     chequeID: -1, transitNumber: -1, institutionNumber: -1,
                     accountNumber: -1, date: Date().toString(), clientName: "Settlement Node", deposInstNum: banks_array[i].key,
                     outputMap: outputMap

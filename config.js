@@ -14,7 +14,7 @@ const GENESIS_DATA = {
     payee: 'payee-name',
     payeeSign: 'payor-sign',
     */////////////////
-    timestamp: 1,
+    timestamp: Date.now(),
     lastHash: '-----',
     hash: 'hash-one',
     difficulty: INITIAL_DIFFICULTY, 
@@ -22,7 +22,7 @@ const GENESIS_DATA = {
     data: []
 };
 
-const STARTING_BALANCE = 1000;
+const STARTING_BALANCE = 10000;
 
 const REWARD_INPUT = { address: '*authorized-reward*' };
 
