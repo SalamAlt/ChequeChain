@@ -9,9 +9,10 @@ class ShowBankWallets extends Component {
         fetch(`${document.location.origin}/api/bank-wallets`)
             .then(response => { return response.json() })
             .then(json => {
-                let wallets = Object.keys(json.output).map((inst) => {
+                let wallets = json.banks_array.map((bank) => {
                     return (
-                        <ul key = {inst}>Bank wallet: {inst}, Balance: {json.output[inst]} </ul>
+                    <ul key = {bank.name}>Name: {bank.name}({bank.instNum}), 
+                    Balance: {bank.balance} </ul>
                     )
                 })
                 this.setState({ wallets: wallets })           
