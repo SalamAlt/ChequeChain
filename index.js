@@ -143,7 +143,8 @@ app.get('/api/bank-wallets', (req, res) => {
             //add each banks institution number to a set (does not repeat values)
 
             for (let i = 0; i < response.data.length; i++) {
-                banks_set.add(response.data[i].finInstNum)
+                banks_set.add({name: response.data[i].name, instNum: response.data[i].finInstNum, balance: 0})
+              //  console.log(response.data[i])
             }
             banks_array = Array.from(banks_set);
             var output = {};
@@ -156,10 +157,10 @@ app.get('/api/bank-wallets', (req, res) => {
 
                         //      console.log("transaction in API bank-wallets is")
                         //  console.log(transaction)
-                        if (banks_array[i] == transaction.recipient) {
+                        if (banks_array[i].instNum == transaction.recipient) {
 
                             foundSettled = true;
-                            output[banks_array[i]] = transaction.inputAmount;
+                            banks_array[i].balance = transaction.inputAmount;
                             console.log("inputAmount is " + transaction.inputAmount)
                             console.log("recipient is " + transaction.recipient)
                         }
@@ -170,14 +171,14 @@ app.get('/api/bank-wallets', (req, res) => {
                         break;
                 }//end of blockchain loop
                 if (!foundSettled)
-                    output[banks_array[i]] = STARTING_BALANCE;
+                    banks_array[i].balance = STARTING_BALANCE;
             }//end of banks_array loop
 
             console.log("testing bank wallets under this line: ");
 
             console.log(output);
             res.json({
-                output
+                banks_array
             });
             // .finInstNum)
         }).catch(err => {
@@ -189,6 +190,30 @@ app.get('/api/bank-wallets', (req, res) => {
 
 app.get('/api/instNum', (req, res) => {
     res.json(process.env.INST_NUM);
+});
+
+app.post('/api/myCheques', (req, res) => {
+    const  walletAddress  = wallet.publicKey//req.body;
+
+
+    var trans_set = new Set();
+    for (let j = 1; j < blockchain.chain.length; j++) {
+        const block = blockchain.chain[j];
+        for (let transaction of block.data) {
+            if (transaction.input.address == walletAddress) {
+                trans_set.add(transaction);       
+            }
+        }   //end of transaction loop
+    }//end of blockchain loop
+    trans_array = Array.from(trans_set);
+
+    if (trans_array)
+    {
+    res.json({trans_array});
+}
+else{
+res.error("Could not find cheques!");
+}
 });
 
 app.get('*', (req, res) => {
