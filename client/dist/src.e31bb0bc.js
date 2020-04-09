@@ -34109,6 +34109,13 @@ var Landing = /*#__PURE__*/function (_Component) {
         href: "/show-bank-wallets"
       }, "Bank Wallets ", _react.default.createElement("span", {
         className: "sr-only"
+      }, "(current)"))), _react.default.createElement("li", {
+        className: "nav-item"
+      }, _react.default.createElement("a", {
+        className: "nav-link text-white text-uppercase ml-5",
+        href: "/show-cheques"
+      }, "Show Cheques ", _react.default.createElement("span", {
+        className: "sr-only"
       }, "(current)")))), localStorage.usertoken ? userLink : loginRegLink));
     }
   }]);
@@ -54353,7 +54360,7 @@ var TransactionPool = /*#__PURE__*/function (_Component) {
       }, "Deposit Another Cheque")), _react.default.createElement("br", null), _react.default.createElement(_reactBootstrap.Button, {
         bsStyle: "danger",
         onClick: this.fetchMineTransactions
-      }, "Submit Cheques For Clearance"), _react.default.createElement("br", null), _react.default.createElement(_reactBootstrap.Button, {
+      }, "Submit Cheques For Clearance"), _react.default.createElement("br", null), _react.default.createElement("br", null), _react.default.createElement(_reactBootstrap.Button, {
         bsStyle: "danger",
         onClick: this.clearInvalidTransactions
       }, "Clear Invalid Transactions")));
@@ -54697,10 +54704,10 @@ var ShowBankWallets = /*#__PURE__*/function (_Component) {
       fetch("".concat(document.location.origin, "/api/bank-wallets")).then(function (response) {
         return response.json();
       }).then(function (json) {
-        var wallets = Object.keys(json.output).map(function (inst) {
+        var wallets = json.banks_array.map(function (bank) {
           return _react.default.createElement("ul", {
-            key: inst
-          }, "Bank wallet: ", inst, ", Balance: ", json.output[inst], " ");
+            key: bank.name
+          }, "Name: ", bank.name, "(", bank.instNum, "), Balance: ", bank.balance, " ");
         });
 
         _this2.setState({
@@ -54722,12 +54729,151 @@ var ShowBankWallets = /*#__PURE__*/function (_Component) {
 
 var _default = ShowBankWallets;
 exports.default = _default;
+},{"react":"../../node_modules/react/index.js","./Navbar":"components/Navbar.js"}],"components/ShowCheques.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireWildcard(require("react"));
+
+var _Navbar = _interopRequireDefault(require("./Navbar"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+//This class returns a page showing all cheques written by the bank/user
+//currently just uses the bank address until we implement user stuff
+//NEEDS: formatting!
+var ShowCheques = /*#__PURE__*/function (_Component) {
+  _inherits(ShowCheques, _Component);
+
+  function ShowCheques() {
+    var _getPrototypeOf2;
+
+    var _this;
+
+    _classCallCheck(this, ShowCheques);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(ShowCheques)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this), "state", {
+      cheques: [],
+      walletAddress: "",
+      displayTransaction: false
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "toggleTransaction", function () {
+      _this.setState({
+        displayTransaction: !_this.state.displayTransaction
+      });
+    });
+
+    return _this;
+  }
+
+  _createClass(ShowCheques, [{
+    key: "componentWillMount",
+    value: function componentWillMount() {
+      var _this2 = this;
+
+      fetch("".concat(document.location.origin, "/api/wallet-info")).then(function (response) {
+        return response.json();
+      }).then(function (json) {
+        return _this2.setState({
+          walletAddress: json.address
+        });
+      });
+    }
+  }, {
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      var _this3 = this;
+
+      fetch("".concat(document.location.origin, "/api/myCheques"), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: this.state.walletAddress
+      }).then(function (response) {
+        return response.json();
+      }).then(function (json) {
+        var cheques_ = json.trans_array.map(function (trans) {
+          var input = trans.input,
+              outputMap = trans.outputMap,
+              chequeID = trans.chequeID,
+              transitNumber = trans.transitNumber,
+              institutionNumber = trans.institutionNumber,
+              accountNumber = trans.accountNumber,
+              clientName = trans.clientName,
+              date = trans.date;
+          var recipient = Object.keys(outputMap);
+          return _react.default.createElement("div", {
+            className: "Transaction"
+          }, _react.default.createElement("hr", null), _react.default.createElement("div", null, "To: ", "".concat(recipient[0].substring(0, 20), "..."), " | | Sent: ", outputMap[recipient[0]], " Balance: ", input.amount), _react.default.createElement("div", null, "Cheque ID: ", chequeID), _react.default.createElement("div", null, "Cheque Date: ", date), _react.default.createElement("div", null, "Account Number: ", accountNumber), _react.default.createElement("div", null, "Transit Number: ", transitNumber), _react.default.createElement("div", null, "Institution Number: ", institutionNumber));
+        });
+
+        if (!cheques_) {
+          cheques_ = _react.default.createElement("div", null, "No cheques that have been written by you have been deposited.");
+        }
+
+        _this3.setState({
+          cheques: cheques_
+        });
+      });
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      console.log(this.state);
+      return _react.default.createElement("div", {
+        clasName: "empty mt-2"
+      }, _react.default.createElement(_Navbar.default, null), _react.default.createElement("h3", null, "My Cheques | Wallet: ", "".concat(this.state.walletAddress.substring(0, 20), "...")), this.state.cheques);
+    }
+  }]);
+
+  return ShowCheques;
+}(_react.Component);
+
+;
+var _default = ShowCheques;
+exports.default = _default;
 },{"react":"../../node_modules/react/index.js","./Navbar":"components/Navbar.js"}],"index.css":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
 module.hot.dispose(reloadCSS);
 module.hot.accept(reloadCSS);
-},{"./assets/banner.png":[["banner.9174b583.png","assets/banner.png"],"assets/banner.png"],"_css_loader":"../../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/UserFunctions.js":[function(require,module,exports) {
+},{"./assets/logo-inverse.png":[["logo-inverse.8cebcbbc.png","assets/logo-inverse.png"],"assets/logo-inverse.png"],"_css_loader":"../../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/UserFunctions.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -55559,6 +55705,9 @@ var WriteCheque = /*#__PURE__*/function (_Component) {
 
             _history.default.push('/');
           }).catch(function (err) {
+            //console.log(response.json().message);
+            //console.log(err.message);
+            alert("The key already exists in the server. If you have supplied a CAS then the key exists with a CAS value different than specified");
             console.log(err);
           });
         } //end of else block
@@ -55646,6 +55795,8 @@ var _DepositCheque = _interopRequireDefault(require("./components/DepositCheque"
 
 var _ShowBankWallets = _interopRequireDefault(require("./components/ShowBankWallets"));
 
+var _ShowCheques = _interopRequireDefault(require("./components/ShowCheques"));
+
 require("./index.css");
 
 var _Login = _interopRequireDefault(require("./components/Login"));
@@ -55681,6 +55832,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 }), _react.default.createElement(_reactRouterDom.Route, {
   path: "/show-bank-wallets",
   component: _ShowBankWallets.default
+}), "//show user's bank cheques written", _react.default.createElement(_reactRouterDom.Route, {
+  path: "/show-cheques",
+  component: _ShowCheques.default
 }), "//for login stuff", _react.default.createElement(_reactRouterDom.Route, {
   path: "/register",
   component: _Register.default
@@ -55692,7 +55846,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
   component: _Profile.default
 }))), document.getElementById('root'));
 (0, _registerServiceWorker.default)();
-},{"react":"../../node_modules/react/index.js","react-dom":"../../node_modules/react-dom/index.js","react-router-dom":"../../node_modules/react-router-dom/es/index.js","./history":"history.js","./components/App":"components/App.js","./components/Blocks":"components/Blocks.js","./components/TransactionPool":"components/TransactionPool.js","./components/DepositCheque":"components/DepositCheque.js","./components/ShowBankWallets":"components/ShowBankWallets.js","./index.css":"index.css","./components/Login":"components/Login.js","./components/Register":"components/Register.js","./components/Profile":"components/Profile.js","./registerServiceWorker":"registerServiceWorker.js","./components/WriteCheque":"components/WriteCheque.js"}],"../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"react":"../../node_modules/react/index.js","react-dom":"../../node_modules/react-dom/index.js","react-router-dom":"../../node_modules/react-router-dom/es/index.js","./history":"history.js","./components/App":"components/App.js","./components/Blocks":"components/Blocks.js","./components/TransactionPool":"components/TransactionPool.js","./components/DepositCheque":"components/DepositCheque.js","./components/ShowBankWallets":"components/ShowBankWallets.js","./components/ShowCheques":"components/ShowCheques.js","./index.css":"index.css","./components/Login":"components/Login.js","./components/Register":"components/Register.js","./components/Profile":"components/Profile.js","./registerServiceWorker":"registerServiceWorker.js","./components/WriteCheque":"components/WriteCheque.js"}],"../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -55720,7 +55874,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60844" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55710" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -81,11 +81,11 @@ a, a:hover {
 
 
 .jumbo {
-    background: url('/banner.9174b583.png') no-repeat center right;
-    background-size: 85% 100%;
+    background: url('/logo-inverse.8cebcbbc.png') no-repeat center center;
+    background-size: 50% 65%;
     height: 250px;
     position: relative;
-    background-color: white;
+    background-color: red;
     z-index: 2;
 }
 /*
@@ -99,5 +99,6 @@ a, a:hover {
     right: 0;
     z-index: -1;
 }*/
+
 
 /*# sourceMappingURL=/src.e31bb0bc.css.map */
