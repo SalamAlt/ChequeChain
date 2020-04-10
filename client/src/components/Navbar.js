@@ -61,7 +61,7 @@ class Landing extends Component {
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav m-auto" id="underline">
               <li className="nav-item active">
-                <a className="nav-link text-white text-uppercase ml-5" href="/blocks">Blocks <span className="sr-only">(current)</span></a>
+                <a className="nav-link text-white text-uppercase ml-5" href="/blocks">Block Chain<span className="sr-only">(current)</span></a>
               </li>
 
               <li className="nav-item">
