@@ -54,11 +54,13 @@ class ShowCheques extends Component {
     render() {
         console.log(this.state)
         return (
+            <div>
+            <Navbar />
             <div clasName="empty mt-2">
-                <Navbar />
                 <h3>My Cheques | Wallet: {`${this.state.walletAddress.substring(0,20)}...`}</h3>
                 {this.state.cheques}
             </div>
+        </div>
         );
     }
 };
